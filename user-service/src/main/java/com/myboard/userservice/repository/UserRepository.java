@@ -1,12 +1,9 @@
 package com.myboard.userservice.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import com.myboard.userservice.entity.User;
 
-@Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-	// Define custom methods for user data access
-	// ...
+public interface UserRepository extends MongoRepository<User, String> {
+	User findByUsername(String username);
 }

@@ -4,20 +4,14 @@ spring:
 
 ---
 
-spring:
-  profiles: local
+spring.config.activate.on-profile: local
 
     
 # Local MongoDB configuration
-spring.data.mongodb.host: localhost
-spring.data.mongodb.port: 27017
-spring.data.mongodb.database: myboard_users
-spring.data.mongodb.username: <your-username>
-spring.data.mongodb.password: <your-password>
+spring.data.mongodb.uri: mongodb://username:password@localhost:27017/userdb
 ---
 
-spring:
-  profiles: cloud
+spring.config.activate.on-profile: cloud
 
 # Azure MongoDB configuration
 spring.data.mongodb.uri: <azure-mongodb-uri>
