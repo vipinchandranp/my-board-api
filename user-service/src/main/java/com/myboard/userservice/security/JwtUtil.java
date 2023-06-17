@@ -16,10 +16,10 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Component
 public class JwtUtil {
 
-	@Value("${jwt.secret}")
+	@Value("${jwt.secret:Fkchq7GNqdq6gmsAiDFrkOEevJpjGYi+tEH/fiUWvs=}")
 	private String secret;
 
-	@Value("${jwt.expiration}")
+	@Value("${jwt.expiration:300000}")
 	private Long expirationTime;
 
 	public String generateToken(String username) {
