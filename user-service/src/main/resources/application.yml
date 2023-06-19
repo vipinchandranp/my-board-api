@@ -8,7 +8,7 @@ spring.config.activate.on-profile: local
 
     
 # Local MongoDB configuration
-spring.data.mongodb.uri: mongodb://username:password@localhost:27017/userdb
+spring.data.mongodb.uri: mongodb://myboard:123@localhost:27017/userdb
 ---
 
 spring.config.activate.on-profile: cloud
