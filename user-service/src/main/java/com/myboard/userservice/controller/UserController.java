@@ -1,5 +1,8 @@
 package com.myboard.userservice.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +65,7 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
 		}
 
-		//String token = jwtUtil.generateToken(user.getUsername());
+		// String token = jwtUtil.generateToken(user.getUsername());
 
 		// Create a response object containing the token and user details
 		LoginResponse response = new LoginResponse("", user);
@@ -79,5 +82,12 @@ public class UserController {
 		// HttpStatus.CREATED);
 		// Currently just returning a placeholder response
 		return ResponseEntity.ok("Testing");
+	}
+
+	@GetMapping("/getusers")
+	public ResponseEntity<?> getusers() {
+		List<User> allUsers = userRepository.findAll(); // Replace 'UserRepository' with your actual repository class
+		List<String> usernames = allUsers.stream().map(User::getUsername).collect(Collectors.toList());
+		return ResponseEntity.ok(usernames);
 	}
 }

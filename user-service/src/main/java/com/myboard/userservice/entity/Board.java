@@ -1,7 +1,11 @@
 package com.myboard.userservice.entity;
 
+import java.util.Map;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.myboard.userservice.dto.DateTimeSlot;
 
 @Document(collection = "boards")
 public class Board {
@@ -15,8 +19,6 @@ public class Board {
 
 	private String userId; // Reference to the user's ID
 
-	// Constructors, getters, and setters
-
 	public Board() {
 	}
 
@@ -26,7 +28,19 @@ public class Board {
 		this.userId = userId;
 	}
 
-	// Getters and setters
+	// Constructors, getters, and setters
+
+	private Map<String, DateTimeSlot> displayDateTimeMap;
+
+	// Constructors, getters, and setters
+
+	public Map<String, DateTimeSlot> getDisplayDateTimeMap() {
+		return displayDateTimeMap;
+	}
+
+	public void setDisplayDateTimeMap(Map<String, DateTimeSlot> displayDateTimeMap) {
+		this.displayDateTimeMap = displayDateTimeMap;
+	}
 
 	public String getId() {
 		return id;
