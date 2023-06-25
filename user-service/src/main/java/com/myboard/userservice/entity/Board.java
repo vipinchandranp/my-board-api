@@ -30,20 +30,22 @@ public class Board {
 
 	// Constructors, getters, and setters
 
-	private Map<String, DateTimeSlot> displayDateTimeMap;
+	private Map<String, DateTimeSlot> displayDetails;
 
 	// Constructors, getters, and setters
 
-	public Map<String, DateTimeSlot> getDisplayDateTimeMap() {
-		return displayDateTimeMap;
-	}
 
-	public void setDisplayDateTimeMap(Map<String, DateTimeSlot> displayDateTimeMap) {
-		this.displayDateTimeMap = displayDateTimeMap;
-	}
 
 	public String getId() {
 		return id;
+	}
+
+	public Map<String, DateTimeSlot> getDisplayDetails() {
+		return displayDetails;
+	}
+
+	public void setDisplayDetails(Map<String, DateTimeSlot> displayDetails) {
+		this.displayDetails = displayDetails;
 	}
 
 	public void setId(String id) {

@@ -58,7 +58,7 @@ public class BoardController {
 				// Update the fields of the existing board object
 				existingBoard.setTitle(updatedBoard.getTitle());
 				existingBoard.setDescription(updatedBoard.getDescription());
-				existingBoard.setDisplayDateTimeMap(updatedBoard.getDisplayDateTimeMap());
+				existingBoard.setDisplayDetails(updatedBoard.getDisplayDetails());
 				// Save the updated board in the repository
 				boardRepository.save(existingBoard);
 				return ResponseEntity.ok("Board updated successfully");
