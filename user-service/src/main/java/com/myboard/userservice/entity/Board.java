@@ -1,6 +1,6 @@
 package com.myboard.userservice.entity;
 
-import java.util.Map;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,6 +18,11 @@ public class Board {
 	private String description;
 
 	private String userId; // Reference to the user's ID
+	
+	// Constructors, getters, and setters
+
+	private List<DateTimeSlot> displayDetails;
+
 
 	public Board() {
 	}
@@ -28,23 +33,15 @@ public class Board {
 		this.userId = userId;
 	}
 
-	// Constructors, getters, and setters
-
-	private Map<String, DateTimeSlot> displayDetails;
-
-	// Constructors, getters, and setters
-
-
-
 	public String getId() {
 		return id;
 	}
 
-	public Map<String, DateTimeSlot> getDisplayDetails() {
+	public List<DateTimeSlot> getDisplayDetails() {
 		return displayDetails;
 	}
 
-	public void setDisplayDetails(Map<String, DateTimeSlot> displayDetails) {
+	public void setDisplayDetails(List<DateTimeSlot> displayDetails) {
 		this.displayDetails = displayDetails;
 	}
 

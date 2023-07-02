@@ -16,14 +16,17 @@ public class DateTimeSlot {
 
 	private String display;
 
+	private String username;
+
 	public DateTimeSlot() {
 		// Default constructor required for deserialization
 	}
 
-	public DateTimeSlot(LocalDate date, LocalTime startTime, LocalTime endTime, String display) {
+	public DateTimeSlot(LocalDate date, LocalTime startTime, LocalTime endTime, String display, String username) {
 		this.date = date;
 		this.startTime = startTime;
 		this.endTime = endTime;
+		this.username = username;
 		this.display = display;
 	}
 
@@ -58,4 +61,13 @@ public class DateTimeSlot {
 	public void setDisplay(String display) {
 		this.display = display;
 	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
 }
