@@ -18,31 +18,25 @@ public class Board {
 	private String description;
 
 	private String userId; // Reference to the user's ID
-	
-	// Constructors, getters, and setters
+
+	private List<Comment> comments;
 
 	private List<DateTimeSlot> displayDetails;
-
 
 	public Board() {
 	}
 
-	public Board(String title, String description, String userId) {
+	public Board(String title, String description, String userId, List<Comment> comments,
+			List<DateTimeSlot> displayDetails) {
 		this.title = title;
 		this.description = description;
 		this.userId = userId;
+		this.comments = comments;
+		this.displayDetails = displayDetails;
 	}
 
 	public String getId() {
 		return id;
-	}
-
-	public List<DateTimeSlot> getDisplayDetails() {
-		return displayDetails;
-	}
-
-	public void setDisplayDetails(List<DateTimeSlot> displayDetails) {
-		this.displayDetails = displayDetails;
 	}
 
 	public void setId(String id) {
@@ -71,5 +65,21 @@ public class Board {
 
 	public void setUserId(String userId) {
 		this.userId = userId;
+	}
+
+	public List<Comment> getComments() {
+		return comments;
+	}
+
+	public void setComments(List<Comment> comments) {
+		this.comments = comments;
+	}
+
+	public List<DateTimeSlot> getDisplayDetails() {
+		return displayDetails;
+	}
+
+	public void setDisplayDetails(List<DateTimeSlot> displayDetails) {
+		this.displayDetails = displayDetails;
 	}
 }

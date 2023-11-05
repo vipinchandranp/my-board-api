@@ -1,6 +1,9 @@
 package com.myboard.userservice.entity;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.annotation.Id;
@@ -16,9 +19,9 @@ public class User {
 
 	private String password;
 
-	private Set<String> roles = new HashSet<>();
+	private Map<String, List<Board>> approvalsRequiredMap = new HashMap<String, List<Board>>();
 
-	// Constructors, getters, and setters
+	private Set<String> roles = new HashSet<>();
 
 	public User() {
 	}
@@ -34,7 +37,13 @@ public class User {
 		this.roles = roles;
 	}
 
-	// Getters and setters
+	public Map<String, List<Board>> getApprovalsRequiredMap() {
+		return approvalsRequiredMap;
+	}
+
+	public void setApprovalsRequiredMap(Map<String, List<Board>> approvalsRequiredMap) {
+		this.approvalsRequiredMap = approvalsRequiredMap;
+	}
 
 	public String getId() {
 		return id;
