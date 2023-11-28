@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +27,7 @@ import com.myboard.userservice.security.JwtUtil;
 
 @RestController
 @RequestMapping("v1/users/")
+@CrossOrigin
 public class UserController {
 
 	private final UserRepository userRepository;
@@ -90,7 +92,8 @@ public class UserController {
 
 	@GetMapping("/getusers")
 	public ResponseEntity<?> getusers() {
-		List<User> allUsers = userRepository.findAll(); // Replace 'UserRepository' with your actual repository class
+		List<User> allUsers = (List<User>) userRepository.findAll(); // Replace 'UserRepository' with your actual
+																		// repository class
 		List<String> usernames = allUsers.stream().map(User::getUsername).collect(Collectors.toList());
 		return ResponseEntity.ok(usernames);
 	}
