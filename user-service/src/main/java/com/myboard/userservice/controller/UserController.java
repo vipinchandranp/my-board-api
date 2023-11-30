@@ -60,7 +60,7 @@ public class UserController {
 		// Save the user in the database
 		userRepository.save(user);
 
-		return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+		return ResponseEntity.status(HttpStatus.OK).body("User registered successfully");
 	}
 
 	@PostMapping("/login")
