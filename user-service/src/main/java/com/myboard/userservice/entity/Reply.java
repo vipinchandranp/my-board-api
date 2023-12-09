@@ -13,12 +13,23 @@ public class Reply {
 
 	private String userId;
 
+	private String commentId;
+
 	public Reply() {
 	}
 
-	public Reply(String text, String userId) {
+	public Reply(String text, String userId, String commentId) {
 		this.text = text;
 		this.userId = userId;
+		this.commentId = commentId;
+	}
+
+	public String getCommentId() {
+		return commentId;
+	}
+
+	public void setCommentId(String commentId) {
+		this.commentId = commentId;
 	}
 
 	public String getId() {

@@ -1,22 +1,31 @@
 package com.myboard.userservice.security;
 
 import java.io.IOException;
+import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.stereotype.Component;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-public class CustomFilter extends AbstractAuthenticationProcessingFilter {
+@Component
+public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
-	public CustomFilter(AuthenticationManager authenticationManager) {
+	@Autowired
+	public LoginFilter(AuthenticationManager authenticationManager) {
 		super("/**"); // Set the URL pattern for this filter
+
 		setAuthenticationManager(authenticationManager);
 	}
 
@@ -41,6 +50,7 @@ public class CustomFilter extends AbstractAuthenticationProcessingFilter {
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
 			Authentication authResult) throws IOException, ServletException {
+
 		// Custom logic after successful authentication
 		// For example, you can generate and set a JWT token in the response header
 		String token = generateToken(authResult); // Implement token generation logic
@@ -59,7 +69,18 @@ public class CustomFilter extends AbstractAuthenticationProcessingFilter {
 
 	// Helper method to generate a token (implement according to your requirements)
 	private String generateToken(Authentication authentication) {
-		// Implement token generation logic here
-		return "your_generated_token";
+		// Get the principal (authenticated user details)
+		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+		// Set token expiration time (e.g., 1 hour)
+		Date expirationDate = new Date(System.currentTimeMillis() + 3600000);
+
+		// Generate the token
+		String token = Jwts.builder().setSubject(userDetails.getUsername()).setIssuedAt(new Date())
+				.setExpiration(expirationDate).signWith(SignatureAlgorithm.HS512, "secret") // Set your secret key
+																							// here
+				.compact();
+
+		return token;
 	}
 }

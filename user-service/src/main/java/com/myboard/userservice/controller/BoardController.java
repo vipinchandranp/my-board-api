@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.myboard.userservice.dto.BoardDTO;
 import com.myboard.userservice.entity.Board;
+import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.BoardRepository;
+import com.myboard.userservice.security.SecurityUtils;
 import com.myboard.userservice.service.BoardService;
 
 @RestController
@@ -72,8 +74,9 @@ public class BoardController {
 		}
 	}
 
-	@GetMapping("/items/{userId}")
-	public List<Board> getBoardItemsForUser(@PathVariable String userId) {
-		return boardRepository.findByUserId(userId);
+	@GetMapping("/items")
+	public List<Board> getBoardItemsForUser() {
+		User loggedInUser = SecurityUtils.getLoggedInUser();
+		return boardRepository.findByUserId(loggedInUser.getId());
 	}
 }

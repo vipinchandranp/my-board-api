@@ -13,6 +13,8 @@ public class Comment {
 
 	private String text;
 
+	private String boardId;
+
 	private String userId;
 
 	private List<Reply> replies;
@@ -20,10 +22,19 @@ public class Comment {
 	public Comment() {
 	}
 
-	public Comment(String text, String userId, List<Reply> replies) {
+	public Comment(String text, String userId, String boardId, List<Reply> replies) {
 		this.text = text;
 		this.userId = userId;
 		this.replies = replies;
+		this.boardId = boardId;
+	}
+
+	public String getBoardId() {
+		return boardId;
+	}
+
+	public void setBoardId(String boardId) {
+		this.boardId = boardId;
 	}
 
 	public String getId() {

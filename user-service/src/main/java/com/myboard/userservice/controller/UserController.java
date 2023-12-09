@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.myboard.userservice.dto.LoginRequest;
 import com.myboard.userservice.dto.LoginResponse;
 import com.myboard.userservice.dto.SignupRequest;
 import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.JwtUtil;
+import com.myboard.userservice.security.SecurityUtils;
 
 @RestController
 @RequestMapping("v1/users/")
@@ -63,19 +63,12 @@ public class UserController {
 		return ResponseEntity.status(HttpStatus.OK).body("User registered successfully");
 	}
 
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-		User user = userRepository.findByUsername(loginRequest.getUsername());
-
-		if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
-		}
-
-		// String token = jwtUtil.generateToken(user.getUsername());
-
-		// Create a response object containing the token and user details
-		LoginResponse response = new LoginResponse("", user);
-
+	@GetMapping("/login")
+	public ResponseEntity<?> login() {
+		String currentUsername = SecurityUtils.getLoggedInUser().getUsername();
+		User user = userRepository.findByUsername(currentUsername);
+		String token = jwtUtil.generateToken(user.getUsername());
+		LoginResponse response = new LoginResponse(token, user);
 		return ResponseEntity.ok(response);
 	}
 
