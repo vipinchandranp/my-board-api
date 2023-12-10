@@ -25,6 +25,8 @@ import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.JwtUtil;
 import com.myboard.userservice.security.SecurityUtils;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @RestController
 @RequestMapping("v1/users/")
 @CrossOrigin
@@ -62,14 +64,11 @@ public class UserController {
 
 		return ResponseEntity.status(HttpStatus.OK).body("User registered successfully");
 	}
-
+    
 	@GetMapping("/login")
-	public ResponseEntity<?> login() {
-		String currentUsername = SecurityUtils.getLoggedInUser().getUsername();
-		User user = userRepository.findByUsername(currentUsername);
-		String token = jwtUtil.generateToken(user.getUsername());
-		LoginResponse response = new LoginResponse(token, user);
-		return ResponseEntity.ok(response);
+	public ResponseEntity<?> login(HttpServletResponse response) {
+		String token = response.getHeader("Authorization");
+		return ResponseEntity.ok(token);
 	}
 
 	@GetMapping("/hello")

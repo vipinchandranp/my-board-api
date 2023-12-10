@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,10 +22,14 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class LoginFilter extends AbstractAuthenticationProcessingFilter {
+	
+	@Value("${jwt.secret:Fkchq7GNqdq6gms}")
+	private String secret;
+
 
 	@Autowired
 	public LoginFilter(AuthenticationManager authenticationManager) {
-		super("/**"); // Set the URL pattern for this filter
+		super("/v1/users/login"); // Set the URL pattern for this filter
 
 		setAuthenticationManager(authenticationManager);
 	}
@@ -55,6 +60,9 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 		// For example, you can generate and set a JWT token in the response header
 		String token = generateToken(authResult); // Implement token generation logic
 		response.addHeader("Authorization", "Bearer " + token);
+	    response.setContentType("application/json");
+	    response.setCharacterEncoding("UTF-8");
+	    response.getWriter().write("{\"token\":\"" + token + "\"}");
 	}
 
 	@Override
@@ -77,7 +85,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
 		// Generate the token
 		String token = Jwts.builder().setSubject(userDetails.getUsername()).setIssuedAt(new Date())
-				.setExpiration(expirationDate).signWith(SignatureAlgorithm.HS512, "secret") // Set your secret key
+				.setExpiration(expirationDate).signWith(SignatureAlgorithm.HS512, secret) // Set your secret key
 																							// here
 				.compact();
 

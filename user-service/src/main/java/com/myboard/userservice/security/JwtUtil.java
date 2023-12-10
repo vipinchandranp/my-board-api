@@ -16,8 +16,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Component
 public class JwtUtil {
 
-	@Value("${jwt.secret:Fkchq7GNqdq6gmsAiDFrkOEevJpjGYi+tEH/fiUWvs=}")
+	@Value("${jwt.secret:Fkchq7GNqdq6gms}")
 	private String secret;
+
 
 	@Value("${jwt.expiration:300000}")
 	private Long expirationTime;
@@ -54,7 +55,6 @@ public class JwtUtil {
 		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
 
-	private String SECRET_KEY = "secret"; // replace with your secret key
 
 	public String generateToken(UserDetails userDetails) {
 		Map<String, Object> claims = new HashMap<>();
@@ -65,6 +65,6 @@ public class JwtUtil {
 
 		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
 				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours token validity
-				.signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
+				.signWith(SignatureAlgorithm.HS256, secret).compact();
 	}
 }

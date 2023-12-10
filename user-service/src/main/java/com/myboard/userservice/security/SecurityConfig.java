@@ -23,21 +23,21 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.authorizeHttpRequests(
-				authz -> authz.requestMatchers("/login/**").permitAll().anyRequest().authenticated());
-		http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class).addFilterBefore(loginFilter,
-				JwtRequestFilter.class);
 		http.cors(cors -> {
 			cors.configurationSource(request -> {
 				CorsConfiguration configuration = new CorsConfiguration();
 				configuration.setAllowedOrigins(List.of("*"));
-				configuration.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
-				configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+				configuration.setAllowedMethods(List.of("*"));
+				configuration.setAllowedHeaders(List.of("*"));
 				// Customize other CORS settings as needed
 				return configuration;
 			});
-		});
+		})
+		.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+		.addFilterBefore(loginFilter, JwtRequestFilter.class)
+		.authorizeHttpRequests(authz -> authz.requestMatchers("/v1/users/login").permitAll().anyRequest().authenticated());
 		return http.build();
+
 	}
 
 }
