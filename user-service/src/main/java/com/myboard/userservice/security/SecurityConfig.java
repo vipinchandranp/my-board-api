@@ -33,9 +33,10 @@ public class SecurityConfig {
 				return configuration;
 			});
 		})
+		.csrf(csrf -> csrf.disable())
 		.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
 		.addFilterBefore(loginFilter, JwtRequestFilter.class)
-		.authorizeHttpRequests(authz -> authz.requestMatchers("/v1/users/login").permitAll().anyRequest().authenticated());
+		.authorizeHttpRequests(authz -> authz.requestMatchers("/v1/users/login","/v1/users/signup").permitAll().anyRequest().authenticated());
 		return http.build();
 
 	}

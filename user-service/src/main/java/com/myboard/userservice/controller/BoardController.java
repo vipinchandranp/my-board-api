@@ -39,10 +39,10 @@ public class BoardController {
 	public ResponseEntity<String> createBoard(@RequestBody BoardDTO boardDTO) {
 		// Convert the BoardDTO to Board entity
 		Board board = new Board();
-		board.setUserId(boardDTO.getUserId());
 		board.setTitle(boardDTO.getTitle());
 		board.setDescription(boardDTO.getDescription());
-
+		User loggedInUser = SecurityUtils.getLoggedInUser();
+		board.setUserId(loggedInUser.getId());
 		// Save the board using the boardService
 		Board savedBoard = boardService.saveBoard(board);
 
