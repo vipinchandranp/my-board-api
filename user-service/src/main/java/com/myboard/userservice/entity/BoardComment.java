@@ -6,7 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "comments")
-public class Comment {
+public class BoardComment {
 
 	@Id
 	private String id;
@@ -19,10 +19,10 @@ public class Comment {
 
 	private List<Reply> replies;
 
-	public Comment() {
+	public BoardComment() {
 	}
 
-	public Comment(String text, String userId, String boardId, List<Reply> replies) {
+	public BoardComment(String text, String userId, String boardId, List<Reply> replies) {
 		this.text = text;
 		this.userId = userId;
 		this.replies = replies;

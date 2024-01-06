@@ -1,9 +1,11 @@
 package com.myboard.userservice.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -13,9 +15,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.myboard.userservice.dto.BoardDTO;
 import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.BoardRepository;
@@ -28,28 +31,42 @@ import com.myboard.userservice.service.BoardService;
 public class BoardController {
 	private final BoardService boardService;
 	private final BoardRepository boardRepository;
+	private final GridFsTemplate gridFsTemplate;
 
 	@Autowired
-	public BoardController(BoardService boardService, BoardRepository boardRepository) {
+	public BoardController(GridFsTemplate gridFsTemplate, BoardService boardService, BoardRepository boardRepository) {
 		this.boardService = boardService;
 		this.boardRepository = boardRepository;
+		this.gridFsTemplate = gridFsTemplate;
 	}
 
-	@PostMapping(("/save"))
-	public ResponseEntity<String> createBoard(@RequestBody BoardDTO boardDTO) {
+	@PostMapping("/save")
+	public ResponseEntity<String> createBoard(@RequestPart("board") Board boardDto,
+			@RequestPart("imageFile") MultipartFile imageFile) {
 		// Convert the BoardDTO to Board entity
 		Board board = new Board();
-		board.setTitle(boardDTO.getTitle());
-		board.setDescription(boardDTO.getDescription());
+		board.setTitle(boardDto.getTitle());
+		board.setDescription(boardDto.getDescription());
 		User loggedInUser = SecurityUtils.getLoggedInUser();
 		board.setUserId(loggedInUser.getId());
-		// Save the board using the boardService
-		Board savedBoard = boardService.saveBoard(board);
 
-		if (savedBoard != null) {
-			return ResponseEntity.status(HttpStatus.CREATED).body("Board created successfully");
-		} else {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create board");
+		try {
+			if (imageFile != null && !imageFile.isEmpty()) {
+				// Set the image file in the Board entity using GridFsTemplate
+				board.setImageFile(gridFsTemplate, imageFile.getInputStream(), imageFile.getOriginalFilename());
+			}
+
+			// Save the board using the boardService
+			Board savedBoard = boardService.saveBoard(board);
+
+			if (savedBoard != null) {
+				return ResponseEntity.status(HttpStatus.CREATED).body("Board created successfully");
+			} else {
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create board");
+			}
+		} catch (IOException e) {
+			// Handle the exception (e.g., log it or return an error response)
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process image file");
 		}
 	}
 
