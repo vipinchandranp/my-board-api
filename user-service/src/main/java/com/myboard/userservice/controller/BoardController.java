@@ -1,12 +1,14 @@
 package com.myboard.userservice.controller;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +27,8 @@ import com.myboard.userservice.repository.BoardRepository;
 import com.myboard.userservice.security.SecurityUtils;
 import com.myboard.userservice.service.BoardService;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @RestController
 @RequestMapping("/v1/board")
 @CrossOrigin
@@ -40,13 +44,13 @@ public class BoardController {
 		this.gridFsTemplate = gridFsTemplate;
 	}
 
-	@PostMapping("/save")
-	public ResponseEntity<String> createBoard(@RequestPart("board") Board boardDto,
-			@RequestPart("imageFile") MultipartFile imageFile) {
+	@PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<String> createBoard(@RequestPart("boardTitle") String boardTitle,
+			@RequestPart("boardDesc") String boardDesc, @RequestPart("imageFile") MultipartFile imageFile) {
 		// Convert the BoardDTO to Board entity
 		Board board = new Board();
-		board.setTitle(boardDto.getTitle());
-		board.setDescription(boardDto.getDescription());
+		board.setTitle(boardTitle);
+		board.setDescription(boardDesc);
 		User loggedInUser = SecurityUtils.getLoggedInUser();
 		board.setUserId(loggedInUser.getId());
 
@@ -96,4 +100,36 @@ public class BoardController {
 		User loggedInUser = SecurityUtils.getLoggedInUser();
 		return boardRepository.findByUserId(loggedInUser.getId());
 	}
+
+	@GetMapping("/title-id")
+	public List<BoardRepository.ProjectionTitleIdDto> getBoardItemsTitle() {
+		User loggedInUser = SecurityUtils.getLoggedInUser();
+		return boardRepository.getTitleAndId(loggedInUser.getId());
+	}
+
+	@GetMapping("/details/{boardId}")
+	public void getBoardDetailsById(@PathVariable String boardId, HttpServletResponse response) {
+		try {
+			// Call the boardService to get details based on boardId
+			Board boardDetails = boardService.getBoardDetailsById(boardId);
+
+			// Fetch image bytes
+			byte[] imageBytes = boardService.getImageBytes(boardDetails.getImageFileId());
+
+			// Set content type and length
+			response.setContentType(MediaType.IMAGE_PNG_VALUE); // Adjust content type based on your image type
+			response.setContentLength(imageBytes.length);
+
+			// Stream the image content
+			OutputStream outputStream = response.getOutputStream();
+			outputStream.write(imageBytes);
+			outputStream.flush();
+			outputStream.close();
+		} catch (Exception e) {
+			// Handle exceptions, log the error, and return an INTERNAL_SERVER_ERROR status
+			e.printStackTrace();
+			response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+		}
+	}
+
 }

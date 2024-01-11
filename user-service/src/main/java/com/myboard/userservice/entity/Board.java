@@ -1,10 +1,10 @@
 package com.myboard.userservice.entity;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -32,7 +32,7 @@ public class Board {
 	private String description;
 
 	@NotBlank
-	private String userId; // Reference to the user's ID
+	private String userId;
 
 	@NotNull
 	private List<BoardComment> boardComments;
@@ -41,70 +41,7 @@ public class Board {
 	private List<DateTimeSlot> displayDetails;
 
 	@Field("org.springframework.data.mongodb.core.mapping.DBRef")
-	private String imageFileId; // Reference to the GridFS file
-
-	// Getter and setter for id
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	// Getter and setter for title
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
-	// Getter and setter for description
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	// Getter and setter for userId
-	public String getUserId() {
-		return userId;
-	}
-
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
-
-	// Getter and setter for boardComments
-	public List<BoardComment> getBoardComments() {
-		return boardComments;
-	}
-
-	public void setBoardComments(List<BoardComment> boardComments) {
-		this.boardComments = boardComments;
-	}
-
-	// Getter and setter for displayDetails
-	public List<DateTimeSlot> getDisplayDetails() {
-		return displayDetails;
-	}
-
-	public void setDisplayDetails(List<DateTimeSlot> displayDetails) {
-		this.displayDetails = displayDetails;
-	}
-
-	// Getter and setter for imageFileId
-	public String getImageFileId() {
-		return imageFileId;
-	}
-
-	public void setImageFileId(String imageFileId) {
-		this.imageFileId = imageFileId;
-	}
+	private String imageFileId;
 
 	public Board() {
 	}
@@ -118,7 +55,61 @@ public class Board {
 		this.displayDetails = displayDetails;
 	}
 
-	// Other getters and setters...
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
+	public List<BoardComment> getBoardComments() {
+		return boardComments;
+	}
+
+	public void setBoardComments(List<BoardComment> boardComments) {
+		this.boardComments = boardComments;
+	}
+
+	public List<DateTimeSlot> getDisplayDetails() {
+		return displayDetails;
+	}
+
+	public void setDisplayDetails(List<DateTimeSlot> displayDetails) {
+		this.displayDetails = displayDetails;
+	}
+
+	public String getImageFileId() {
+		return imageFileId;
+	}
+
+	public void setImageFileId(String imageFileId) {
+		this.imageFileId = imageFileId;
+	}
 
 	public void setImageFile(GridFsTemplate gridFsTemplate, InputStream inputStream, String fileName)
 			throws IOException {
@@ -127,19 +118,36 @@ public class Board {
 	}
 
 	public InputStream getImageFile(GridFsTemplate gridFsTemplate) throws IOException {
-	    // Ensure that the imageFileId is not null or empty
-	    if (imageFileId == null || imageFileId.isEmpty()) {
-	        return null;
-	    }
+		// Ensure that the imageFileId is not null or empty
+		if (imageFileId == null || imageFileId.isEmpty()) {
+			return null;
+		}
 
-	    // Retrieve the file from GridFS using the file ID
-	    GridFSFile gridFsFile = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(imageFileId)));
-	    if (gridFsFile != null) {
-	        return gridFsTemplate.getResource(gridFsFile).getInputStream();
-	    } else {
-	        return null; // Or handle the case where the file is not found
-	    }
+		// Convert the String imageFileId to ObjectId
+		ObjectId objectId = new ObjectId(imageFileId);
+
+		// Retrieve the file from GridFS using the file ID
+		GridFSFile gridFsFile = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(objectId)));
+		if (gridFsFile != null) {
+			GridFsResource resource = gridFsTemplate.getResource(gridFsFile);
+			return resource.getInputStream();
+		} else {
+			return null; // Or handle the case where the file is not found
+		}
 	}
 
+	private byte[] imageBytes; // Add this line
+
+	// ... other class members ...
+
+	// Add this method
+	public void setImageBytes(byte[] imageBytes) {
+		this.imageBytes = imageBytes;
+	}
+
+	// Add this method if you need to get the image bytes
+	public byte[] getImageBytes() {
+		return imageBytes;
+	}
 
 }
