@@ -1,40 +1,35 @@
 package com.myboard.userservice.entity;
 
-import java.util.List;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "comments")
-public class BoardComment {
+@Document(collection = "replies")
+public class BoardCommentReply {
 
 	@Id
 	private String id;
 
 	private String text;
 
-	private String boardId;
-
 	private String userId;
 
-	private List<BoardCommentReply> replies;
+	private String commentId;
 
-	public BoardComment() {
+	public BoardCommentReply() {
 	}
 
-	public BoardComment(String text, String userId, String boardId, List<BoardCommentReply> replies) {
+	public BoardCommentReply(String text, String userId, String commentId) {
 		this.text = text;
 		this.userId = userId;
-		this.replies = replies;
-		this.boardId = boardId;
+		this.commentId = commentId;
 	}
 
-	public String getBoardId() {
-		return boardId;
+	public String getCommentId() {
+		return commentId;
 	}
 
-	public void setBoardId(String boardId) {
-		this.boardId = boardId;
+	public void setCommentId(String commentId) {
+		this.commentId = commentId;
 	}
 
 	public String getId() {
@@ -59,13 +54,5 @@ public class BoardComment {
 
 	public void setUserId(String userId) {
 		this.userId = userId;
-	}
-
-	public List<BoardCommentReply> getReplies() {
-		return replies;
-	}
-
-	public void setReplies(List<BoardCommentReply> replies) {
-		this.replies = replies;
 	}
 }

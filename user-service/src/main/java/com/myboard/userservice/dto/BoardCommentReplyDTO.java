@@ -1,12 +1,7 @@
-package com.myboard.userservice.entity;
+package com.myboard.userservice.dto;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+public class BoardCommentReplyDTO {
 
-@Document(collection = "replies")
-public class Reply {
-
-	@Id
 	private String id;
 
 	private String text;
@@ -15,10 +10,10 @@ public class Reply {
 
 	private String commentId;
 
-	public Reply() {
+	public BoardCommentReplyDTO() {
 	}
 
-	public Reply(String text, String userId, String commentId) {
+	public BoardCommentReplyDTO(String text, String userId, String commentId) {
 		this.text = text;
 		this.userId = userId;
 		this.commentId = commentId;

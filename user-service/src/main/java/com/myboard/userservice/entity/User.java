@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
+import javax.persistence.OneToMany;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
@@ -30,6 +33,17 @@ public class User implements UserDetails {
 	private Map<String, List<Board>> approvalsRequiredMap = new HashMap<String, List<Board>>();
 
 	private Set<String> roles = new HashSet<>();
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
+	private List<DisplayDetails> displays;
+
+	public List<DisplayDetails> getDisplays() {
+		return displays;
+	}
+
+	public void setDisplays(List<DisplayDetails> displays) {
+		this.displays = displays;
+	}
 
 	public User() {
 	}
