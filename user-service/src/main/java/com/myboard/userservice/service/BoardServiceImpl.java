@@ -1,35 +1,89 @@
 package com.myboard.userservice.service;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.mongodb.client.gridfs.model.GridFSFile;
 import com.myboard.userservice.entity.Board;
+import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.BoardRepository;
+import com.myboard.userservice.security.SecurityUtils;
 
 @Service
 public class BoardServiceImpl implements BoardService {
 
 	private final BoardRepository boardRepository;
-	private final GridFsTemplate gridFsTemplate;
+
+	@Value("${myboard.board.path}")
+	private String boardImagesPath;
 
 	@Autowired
-	public BoardServiceImpl(BoardRepository boardRepository, GridFsTemplate gridFsTemplate) {
+	public BoardServiceImpl(BoardRepository boardRepository) {
 		this.boardRepository = boardRepository;
-		this.gridFsTemplate = gridFsTemplate;
 	}
 
 	@Override
-	public Board saveBoard(Board board) {
+	public Board saveBoard(Board board, MultipartFile imageFile) {
+
+		User loggedInUser = SecurityUtils.getLoggedInUser();
+		board.setUserId(loggedInUser.getId());
+
+		if (imageFile != null) {
+			// Process and store the single image file
+			String imageFileName = storeImageFile(board.getUser().getUsername(), board.getId(), imageFile);
+			// Save the image file name to the Board entity
+			storeImageFile(imageFileName, imageFileName, imageFile);
+			board.setFileName(imageFileName);
+		}
+
+		// Save the Board entity to MongoDB
 		return boardRepository.save(board);
+	}
+
+	// Method to process and store a single image file
+	private String storeImageFile(String userName, String boardId, MultipartFile imageFile) {
+		try {
+			// Get the original file name from MultipartFile
+			String originalFileName = imageFile.getOriginalFilename();
+
+			// Generate a unique file name with timestamp, board ID, and original file
+			// extension
+			String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+			String generatedFileName = userName + "_" + boardId + "_" + UUID.randomUUID().toString() + "_" + timestamp
+					+ getFileExtension(originalFileName);
+
+			// Create the full directory path
+			Path directory = Paths.get(boardImagesPath, userName);
+			Files.createDirectories(directory);
+
+			// Create the full file path
+			Path filePath = Paths.get(directory.toString(), generatedFileName);
+
+			// Save the file to the specified directory
+			Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+			return generatedFileName;
+		} catch (IOException e) {
+			// Handle the exception (log, throw, etc.)
+			e.printStackTrace();
+			throw new RuntimeException("Failed to store image file", e);
+		}
+	}
+
+	// Helper method to extract file extension from a file name
+	private String getFileExtension(String fileName) {
+		int dotIndex = fileName.lastIndexOf('.');
+		return (dotIndex == -1) ? "" : fileName.substring(dotIndex);
 	}
 
 	@Override
@@ -48,24 +102,30 @@ public class BoardServiceImpl implements BoardService {
 	}
 
 	@Override
-	public byte[] getImageBytes(String imageFileId) {
-		if (imageFileId == null || imageFileId.isEmpty()) {
-			return new byte[0];
-		}
-
+	public byte[] getImageBytes(String boardId) {
 		try {
-			// Retrieve the file from GridFS using the file ID
-			GridFSFile gridFsFile = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(imageFileId)));
-			if (gridFsFile != null) {
-				GridFsResource resource = gridFsTemplate.getResource(gridFsFile);
-				InputStream inputStream = resource.getInputStream();
-				return StreamUtils.copyToByteArray(inputStream);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+			// Retrieve the board details from MongoDB
+			Board board = boardRepository.findById(boardId).orElse(null);
 
-		return new byte[0];
+			if (board != null) {
+				// Get the image file name from the board
+				String imageFileName = board.getFileName();
+
+				if (imageFileName != null && !imageFileName.isEmpty()) {
+					// Create the full file path
+					Path filePath = Paths.get(boardImagesPath, board.getUser().getUsername(), imageFileName);
+
+					// Read the file content into a byte array
+					return Files.readAllBytes(filePath);
+				}
+			}
+
+			throw new RuntimeException("Image not found for Board ID: " + boardId);
+		} catch (IOException e) {
+			// Handle the exception (log, throw, etc.)
+			e.printStackTrace();
+			throw new RuntimeException("Failed to load image file", e);
+		}
 	}
 
 }

@@ -14,9 +14,17 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.myboard.userservice.dto.SelectLocationDTO;
 import com.myboard.userservice.entity.DisplayDetails;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.DisplayNotFoundException;
@@ -27,11 +35,15 @@ import com.myboard.userservice.security.SecurityUtils;
 @Service
 public class DisplayServiceImpl implements DisplayService {
 
-	private final Environment environment;
+	@Autowired
+	private Environment environment;
+
+	private MongoTemplate mongoTemplate;
 
 	@Autowired
-	public DisplayServiceImpl(Environment environment) {
-		this.environment = environment;
+	public DisplayServiceImpl(DisplayRepository displayRepository, MongoTemplate mongoTemplate) {
+		this.displayRepository = displayRepository;
+		this.mongoTemplate = mongoTemplate;
 	}
 
 	@Autowired
@@ -74,6 +86,13 @@ public class DisplayServiceImpl implements DisplayService {
 
 		// Update the saved displayDetails with the image information
 		displayRepository.save(savedDisplay);
+
+		// Add the savedDisplay to the list of displays in the loggedInUser
+		userDisplays.add(savedDisplay);
+		loggedInUser.setDisplays(userDisplays);
+
+		// Save the updated user to MongoDB
+		userRepository.save(loggedInUser);
 	}
 
 	// Method to process and store a single image file
@@ -183,6 +202,20 @@ public class DisplayServiceImpl implements DisplayService {
 		DisplayDetails displayDetails = displayRepository.findById(displayId)
 				.orElseThrow(() -> new DisplayNotFoundException("Display not found with ID: " + displayId));
 		return displayDetails;
+	}
+
+	public List<DisplayDetails> getDisplaysNearby(SelectLocationDTO locationDTO, double radius) {
+		// Create a GeoJsonPoint from the given latitude and longitude
+		GeoJsonPoint geoJsonPoint = new GeoJsonPoint(locationDTO.getLongitude(), locationDTO.getLatitude());
+
+		// Create a circle representing the area within the specified radius
+		Circle circle = new Circle(geoJsonPoint, new Distance(radius, Metrics.KILOMETERS));
+
+		// Create a query to find displays within the specified circle
+		Query query = Query.query(Criteria.where("location").withinSphere(circle));
+
+		// Execute the query
+		return mongoTemplate.find(query, DisplayDetails.class);
 	}
 
 }

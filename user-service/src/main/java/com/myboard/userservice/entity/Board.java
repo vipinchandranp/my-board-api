@@ -1,19 +1,11 @@
 package com.myboard.userservice.entity;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
-import com.mongodb.client.gridfs.model.GridFSFile;
 import com.myboard.userservice.dto.DateTimeSlot;
 
 import jakarta.validation.constraints.NotBlank;
@@ -40,8 +32,26 @@ public class Board {
 	@NotNull
 	private List<DateTimeSlot> displayDetails;
 
-	@Field("org.springframework.data.mongodb.core.mapping.DBRef")
-	private String imageFileId;
+	private String fileName;
+
+	@DBRef
+	private User user;
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
 
 	public Board() {
 	}
@@ -101,53 +111,6 @@ public class Board {
 
 	public void setDisplayDetails(List<DateTimeSlot> displayDetails) {
 		this.displayDetails = displayDetails;
-	}
-
-	public String getImageFileId() {
-		return imageFileId;
-	}
-
-	public void setImageFileId(String imageFileId) {
-		this.imageFileId = imageFileId;
-	}
-
-	public void setImageFile(GridFsTemplate gridFsTemplate, InputStream inputStream, String fileName)
-			throws IOException {
-		// Store the file in GridFS and get the file ID
-		imageFileId = gridFsTemplate.store(inputStream, fileName).toString();
-	}
-
-	public InputStream getImageFile(GridFsTemplate gridFsTemplate) throws IOException {
-		// Ensure that the imageFileId is not null or empty
-		if (imageFileId == null || imageFileId.isEmpty()) {
-			return null;
-		}
-
-		// Convert the String imageFileId to ObjectId
-		ObjectId objectId = new ObjectId(imageFileId);
-
-		// Retrieve the file from GridFS using the file ID
-		GridFSFile gridFsFile = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(objectId)));
-		if (gridFsFile != null) {
-			GridFsResource resource = gridFsTemplate.getResource(gridFsFile);
-			return resource.getInputStream();
-		} else {
-			return null; // Or handle the case where the file is not found
-		}
-	}
-
-	private byte[] imageBytes; // Add this line
-
-	// ... other class members ...
-
-	// Add this method
-	public void setImageBytes(byte[] imageBytes) {
-		this.imageBytes = imageBytes;
-	}
-
-	// Add this method if you need to get the image bytes
-	public byte[] getImageBytes() {
-		return imageBytes;
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.myboard.userservice.controller;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,15 +18,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.myboard.userservice.dto.LoginResponse;
+import com.myboard.userservice.dto.SelectLocationDTO;
 import com.myboard.userservice.dto.SignupRequest;
 import com.myboard.userservice.entity.Board;
+import com.myboard.userservice.entity.Location;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.JwtUtil;
 import com.myboard.userservice.security.SecurityUtils;
+import com.myboard.userservice.service.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("v1/users/")
@@ -34,6 +38,9 @@ public class UserController {
 
 	private final UserRepository userRepository;
 	private final BCryptPasswordEncoder passwordEncoder;
+
+	@Autowired
+	UserService userService;
 
 	@Autowired
 	private JwtUtil jwtUtil;
@@ -64,11 +71,32 @@ public class UserController {
 
 		return ResponseEntity.status(HttpStatus.OK).body("User registered successfully");
 	}
-    
+
 	@GetMapping("/login")
 	public ResponseEntity<?> login(HttpServletResponse response) {
 		String token = response.getHeader("Authorization");
 		return ResponseEntity.ok(token);
+	}
+
+	@GetMapping("/init-user")
+	public ResponseEntity<Map<String, Object>> initUser() {
+		// If location is null or empty, default to India's location
+		User loggedInUser = SecurityUtils.getLoggedInUser();
+		Location selectedLocation = (loggedInUser.getLocation() == null) ? getDefaultLocation()
+				: loggedInUser.getLocation();
+
+		Map<String, Object> responseMap = new HashMap<>();
+		responseMap.put("username", loggedInUser.getUsername());
+		responseMap.put("selectedLocation", selectedLocation);
+
+		return ResponseEntity.ok(responseMap);
+	}
+
+	private Location getDefaultLocation() {
+		// Create and return a default location for India
+		Location defaultLocation = new Location("India", 28.6139, 77.2090);
+		// You can set other properties as needed
+		return defaultLocation;
 	}
 
 	@GetMapping("/hello")
@@ -113,5 +141,12 @@ public class UserController {
 		User userDetails = userRepository.findByUsername(username);
 		Map<String, List<Board>> approvalsRequiredMap = userDetails.getApprovalsRequiredMap();
 		return approvalsRequiredMap;
+	}
+
+	@PostMapping("/save-location")
+	public ResponseEntity<?> savePrimaryLocation(@RequestBody @Valid SelectLocationDTO selectLocationDTO) {
+		userService.saveLocationForLoggedInUser(selectLocationDTO);
+		String responseMessage = "Location saved successfully.";
+		return ResponseEntity.status(HttpStatus.OK).body(responseMessage);
 	}
 }

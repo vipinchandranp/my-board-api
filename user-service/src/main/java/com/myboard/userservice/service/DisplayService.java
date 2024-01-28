@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.myboard.userservice.dto.SelectLocationDTO;
 import com.myboard.userservice.entity.DisplayDetails;
 
 public interface DisplayService {
@@ -18,5 +19,7 @@ public interface DisplayService {
 	List<DisplayDetails> getAllDisplaysForLoggedInUser();
 
 	byte[] getDisplayImage(String displayId);
+
+	List<DisplayDetails> getDisplaysNearby(SelectLocationDTO locationDTO, double radius);
 
 }

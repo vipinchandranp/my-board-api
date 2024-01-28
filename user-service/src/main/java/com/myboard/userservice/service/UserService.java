@@ -2,7 +2,10 @@ package com.myboard.userservice.service;
 
 import org.springframework.stereotype.Service;
 
-@Service
-public class UserService {
+import com.myboard.userservice.dto.SelectLocationDTO;
+
+
+public interface UserService {
+	public void saveLocationForLoggedInUser(SelectLocationDTO selectLocationDTO);
 
 }

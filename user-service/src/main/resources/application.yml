@@ -13,3 +13,5 @@ myboard:
     path: C:/Users/vipin/development/myboard-uploaded-data/display
   board:
     path: C:/Users/vipin/development/myboard-uploaded-data/board
+  map:
+    radius: 100

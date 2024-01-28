@@ -35,13 +35,11 @@ import jakarta.servlet.http.HttpServletResponse;
 public class BoardController {
 	private final BoardService boardService;
 	private final BoardRepository boardRepository;
-	private final GridFsTemplate gridFsTemplate;
 
 	@Autowired
 	public BoardController(GridFsTemplate gridFsTemplate, BoardService boardService, BoardRepository boardRepository) {
 		this.boardService = boardService;
 		this.boardRepository = boardRepository;
-		this.gridFsTemplate = gridFsTemplate;
 	}
 
 	@PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -51,24 +49,16 @@ public class BoardController {
 		Board board = new Board();
 		board.setTitle(boardTitle);
 		board.setDescription(boardDesc);
-		User loggedInUser = SecurityUtils.getLoggedInUser();
-		board.setUserId(loggedInUser.getId());
-
 		try {
-			if (imageFile != null && !imageFile.isEmpty()) {
-				// Set the image file in the Board entity using GridFsTemplate
-				board.setImageFile(gridFsTemplate, imageFile.getInputStream(), imageFile.getOriginalFilename());
-			}
-
-			// Save the board using the boardService
-			Board savedBoard = boardService.saveBoard(board);
+					// Save the board using the boardService
+			Board savedBoard = boardService.saveBoard(board, imageFile);
 
 			if (savedBoard != null) {
 				return ResponseEntity.status(HttpStatus.CREATED).body("Board created successfully");
 			} else {
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create board");
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// Handle the exception (e.g., log it or return an error response)
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process image file");
 		}
@@ -114,7 +104,7 @@ public class BoardController {
 			Board boardDetails = boardService.getBoardDetailsById(boardId);
 
 			// Fetch image bytes
-			byte[] imageBytes = boardService.getImageBytes(boardDetails.getImageFileId());
+			byte[] imageBytes = boardService.getImageBytes(boardId);
 
 			// Set content type and length
 			response.setContentType(MediaType.IMAGE_PNG_VALUE); // Adjust content type based on your image type

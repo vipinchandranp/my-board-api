@@ -16,12 +16,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.myboard.userservice.dto.DisplayDetailsDTO;
+import com.myboard.userservice.dto.SelectLocationDTO;
 import com.myboard.userservice.entity.DisplayDetails;
+import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.DisplayNotFoundException;
 import com.myboard.userservice.service.DisplayService;
 
@@ -94,11 +97,11 @@ public class DisplayController {
 		}
 	}
 
-	// Mapping method to convert DisplayDetails entities to DisplayDetailsDTO DTOs
 	private List<DisplayDetailsDTO> mapToDTOList(List<DisplayDetails> displayList) {
 		List<DisplayDetailsDTO> displayDTOList = new ArrayList<>();
 		for (DisplayDetails displayDetails : displayList) {
 			DisplayDetailsDTO displayDTO = new DisplayDetailsDTO();
+
 			// Copy properties from entity to DTO
 			displayDTO.setId(displayDetails.getId());
 			displayDTO.setLatitude(displayDetails.getLatitude());
@@ -106,7 +109,12 @@ public class DisplayController {
 			displayDTO.setDescription(displayDetails.getDescription());
 			displayDTO.setName(displayDetails.getName());
 			displayDTO.setFileName(displayDetails.getFileName());
-			displayDTO.setUserName(displayDetails.getUser().getUsername());
+
+			// Check if the user is not null before accessing its properties
+			User user = displayDetails.getUser();
+			if (user != null) {
+				displayDTO.setUserName(user.getUsername());
+			}
 
 			// Add the DTO to the list
 			displayDTOList.add(displayDTO);
@@ -123,4 +131,21 @@ public class DisplayController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete display");
 		}
 	}
+
+	@GetMapping("/nearby")
+	public ResponseEntity<List<DisplayDetailsDTO>> getDisplaysNearby(@RequestParam("latitude") double latitude,
+			@RequestParam("longitude") double longitude) {
+		try {
+			// Fetch the radius from the environment property
+			Double radius = Double.parseDouble(environment.getProperty("myboard.map.radius"));
+
+			// List<DisplayDetails> displaysNearby = displayService.getDisplaysNearby(new SelectLocationDTO(latitude, longitude), radius);
+			List<DisplayDetails> userDisplayList = displayService.getAllDisplaysForLoggedInUser();
+			List<DisplayDetailsDTO> displayDTOList = mapToDTOList(userDisplayList);
+			return ResponseEntity.ok(displayDTOList);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+		}
+	}
+
 }

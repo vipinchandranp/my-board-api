@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -36,6 +37,17 @@ public class User implements UserDetails {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
 	private List<DisplayDetails> displays;
+
+	@OneToOne(cascade = CascadeType.ALL, mappedBy = "user")
+	private Location location;
+
+	public Location getLocation() {
+		return location;
+	}
+
+	public void setLocation(Location location) {
+		this.location = location;
+	}
 
 	public List<DisplayDetails> getDisplays() {
 		return displays;

@@ -22,6 +22,11 @@ public class SelectLocationDTO implements Serializable {
 
 	// Getters and setters (omitted for brevity)
 
+	public SelectLocationDTO(double latitude, double longitude) {
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
+
 	@Override
 	public String toString() {
 		return "PlaceDto{" + "name='" + name + '\'' + ", latitude=" + latitude + ", longitude=" + longitude + '}';
