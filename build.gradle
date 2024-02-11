@@ -6,13 +6,11 @@ group 'com.myboard.service'
 version '1.0-SNAPSHOT'
 
 dependencies {
-    implementation project(':common')
-    // Other dependencies specific to microservice1
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_20
-    targetCompatibility = JavaVersion.VERSION_20
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 test {

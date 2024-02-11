@@ -13,9 +13,4 @@ plugins {
 }
 
 rootProject.name = 'my-board-api'
-include 'user-service'
-include 'board-service'
-include 'content-service'
-include 'notification-service'
-include 'analytics-service'
-include 'common'
+include 'main-api'
