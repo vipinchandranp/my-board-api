@@ -6,8 +6,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -21,9 +25,17 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.myboard.userservice.dto.BoardDTO;
 import com.myboard.userservice.dto.BoardWithImage;
+import com.myboard.userservice.dto.DateTimeSlotDTO;
+import com.myboard.userservice.dto.DisplayDateTimeSlotDTO;
 import com.myboard.userservice.entity.Board;
+import com.myboard.userservice.entity.DisplayTimeSlot;
+import com.myboard.userservice.entity.Display;
+import com.myboard.userservice.entity.TimeSlotAvailability;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.BoardRepository;
+import com.myboard.userservice.repository.DateTimeSlotRepository;
+import com.myboard.userservice.repository.DisplayRepository;
+import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.SecurityUtils;
 
 @Service
@@ -31,28 +43,74 @@ public class BoardServiceImpl implements BoardService {
 
 	private final BoardRepository boardRepository;
 
+	private final UserRepository userRepository;
+
+	private final DateTimeSlotRepository dateTimeSlotRepository;
+
+	private final DisplayRepository displayRepository;
+
 	@Value("${myboard.board.path}")
 	private String boardImagesPath;
 
 	@Autowired
-	public BoardServiceImpl(BoardRepository boardRepository) {
+	public BoardServiceImpl(BoardRepository boardRepository, UserRepository userRepository,
+			DateTimeSlotRepository dateTimeSlotRepository, DisplayRepository displayRepository) {
 		this.boardRepository = boardRepository;
+		this.userRepository = userRepository;
+		this.dateTimeSlotRepository = dateTimeSlotRepository;
+		this.displayRepository = displayRepository;
 	}
 
 	@Override
-	public Board saveBoard(String boardTitle, String boardDesc, MultipartFile imageFile) {
+	public Board saveBoard(String boardTitle, String boardDesc, DisplayDateTimeSlotDTO timeslot,
+			MultipartFile imageFile) {
 		User loggedInUser = SecurityUtils.getLoggedInUser();
+
+		Display displayDetails = displayRepository.findById(timeslot.getId()).orElse(null);
 
 		// Create a new Board entity with the provided title and description
 		Board board = new Board();
 		board.setTitle(boardTitle);
 		board.setDescription(boardDesc);
-		board.setUserId(loggedInUser.getId());
-		board.setUser(loggedInUser);
+		board.setUserBoardOwner(loggedInUser);
+
 		// Save the Board entity to MongoDB and retrieve the saved entity with ID
 		Board savedBoard = boardRepository.save(board);
 
-		// Save the image file using the board ID obtained from the savedBoard
+		if (displayDetails != null) {
+			// Update the availability slots in DisplayDetails
+			Map<LocalDate, TimeSlotAvailability> dateToTimeSlots = displayDetails.getDateToTimeSlots();
+
+			for (DateTimeSlotDTO dateTimeSlotDTO : timeslot.getDateTimeSlots()) {
+				// Parse the selectedDate string into a LocalDate object
+				LocalDate selectedDate = LocalDate.parse(dateTimeSlotDTO.getSelectedDate());
+
+				TimeSlotAvailability timeSlotAvailability = dateToTimeSlots.getOrDefault(selectedDate,
+						new TimeSlotAvailability());
+
+				// Assuming no checks for overlapping time slots or other constraints
+				timeSlotAvailability
+						.addBookedTimeSlot(dateTimeSlotDTO.getStartTime() + "-" + dateTimeSlotDTO.getEndTime());
+				dateToTimeSlots.put(selectedDate, timeSlotAvailability);
+
+				// Create a new DateTimeSlot entity for each time slot and save it
+				DisplayTimeSlot dateTimeSlot = new DisplayTimeSlot();
+				dateTimeSlot.setDate(selectedDate);
+				dateTimeSlot.setStartTime(LocalTime.parse(dateTimeSlotDTO.getStartTime()));
+				dateTimeSlot.setEndTime(LocalTime.parse(dateTimeSlotDTO.getEndTime()));
+				dateTimeSlot.setBoard(savedBoard);
+				dateTimeSlot.setDisplay(displayDetails);
+				dateTimeSlot.setBoardOwnerUser(loggedInUser);
+				dateTimeSlot.setDisplayOwnerUser(displayDetails.getUserDisplayOwner());
+				// Save the DateTimeSlot entity to MongoDB
+				dateTimeSlotRepository.save(dateTimeSlot);
+			}
+
+			// Update the display entity with the modified availability slots
+			displayDetails.setDateToTimeSlots(dateToTimeSlots);
+			displayRepository.save(displayDetails);
+		}
+
 		if (imageFile != null) {
 			String imageFileName = storeImageFile(savedBoard.getId(), loggedInUser.getUsername(), imageFile);
 			savedBoard.setFileName(imageFileName);
@@ -61,8 +119,20 @@ public class BoardServiceImpl implements BoardService {
 			savedBoard = boardRepository.save(savedBoard);
 		}
 
-		// Return the saved Board entity, which now contains the generated boardId and
-		// image file name
+		// Save the updated User entity to MongoDB
+		userRepository.save(loggedInUser);
+
+		// Retrieve the list of boards associated with the logged-in user
+		List<Board> userBoards = loggedInUser.getBoards();
+		if (userBoards == null) {
+			userBoards = new ArrayList<>();
+		}
+
+		// Add the newly created board to the list
+		userBoards.add(board);
+		// Set the updated list of boards back to the user
+		loggedInUser.setBoards(userBoards);
+
 		return savedBoard;
 	}
 
@@ -163,7 +233,7 @@ public class BoardServiceImpl implements BoardService {
 
 			if (imageFileName != null && !imageFileName.isEmpty()) {
 				// Create the full file path
-				Path filePath = Paths.get(boardImagesPath, board.getUser().getUsername(), imageFileName);
+				Path filePath = Paths.get(boardImagesPath, board.getUserBoardOwner().getUsername(), imageFileName);
 
 				// Read the file content into a byte array
 				try {

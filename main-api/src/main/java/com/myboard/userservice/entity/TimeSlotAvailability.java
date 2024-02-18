@@ -1,5 +1,6 @@
 package com.myboard.userservice.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TimeSlotAvailability {
@@ -7,9 +8,9 @@ public class TimeSlotAvailability {
 	private List<String> availableTimeSlots;
 	private List<String> bookedTimeSlots;
 
-	public TimeSlotAvailability(List<String> availableTimeSlots, List<String> bookedTimeSlots) {
-		this.availableTimeSlots = availableTimeSlots;
-		this.bookedTimeSlots = bookedTimeSlots;
+	public TimeSlotAvailability() {
+		this.availableTimeSlots = new ArrayList<>();
+		this.bookedTimeSlots = new ArrayList<>();
 	}
 
 	public List<String> getAvailableTimeSlots() {
@@ -26,5 +27,9 @@ public class TimeSlotAvailability {
 
 	public void setBookedTimeSlots(List<String> bookedTimeSlots) {
 		this.bookedTimeSlots = bookedTimeSlots;
+	}
+
+	public void addBookedTimeSlot(String bookedTimeSlot) {
+		this.bookedTimeSlots.add(bookedTimeSlot);
 	}
 }

@@ -9,8 +9,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "display_details")
-public class DisplayDetails {
+@Document(collection = "display")
+public class Display {
 
 	@Id
 	private String id;
@@ -29,7 +29,7 @@ public class DisplayDetails {
 	private List<String> images;
 
 	@DBRef
-	private User user;
+	private User userDisplayOwner;
 
 	private Map<LocalDate, TimeSlotAvailability> dateToTimeSlots = new HashMap<>();
 
@@ -52,8 +52,8 @@ public class DisplayDetails {
 		return "DisplayDetails{" + "id='" + id + '\'' + ", latitude=" + latitude + ", longitude=" + longitude
 				+ ", description='" + description + '\'' + ", name='" + name + '\'' + ", fileName='" + fileName + '\''
 				+ ", comments=" + comments + ", rating=" + rating + ", userId='" + userId + '\'' + ", images=" + images
-				+ ", user=" + user + ", dateToTimeSlots=" + dateToTimeSlots + ", timePeriodUnit='" + timePeriodUnit
-				+ '\'' + '}';
+				+ ", userDisplayOwner=" + userDisplayOwner + ", dateToTimeSlots=" + dateToTimeSlots
+				+ ", timePeriodUnit='" + timePeriodUnit + '\'' + '}';
 	}
 
 	public String getId() {
@@ -136,12 +136,12 @@ public class DisplayDetails {
 		this.images = images;
 	}
 
-	public User getUser() {
-		return user;
+	public User getUserDisplayOwner() {
+		return userDisplayOwner;
 	}
 
-	public void setUser(User user) {
-		this.user = user;
+	public void setUserDisplayOwner(User userDisplayOwner) {
+		this.userDisplayOwner = userDisplayOwner;
 	}
 
 	public String getTimePeriodUnit() {

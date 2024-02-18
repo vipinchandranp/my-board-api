@@ -9,8 +9,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.myboard.userservice.dto.DateTimeSlot;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -32,13 +30,10 @@ public class Board {
 	@NotNull
 	private List<BoardComment> boardComments;
 
-	@NotNull
-	private List<DateTimeSlot> displayDetails;
-
 	private String fileName;
 
 	@DBRef
-	private User user;
+	private User userBoardOwner;
 
 	@CreatedDate
 	private Date createdDate;
@@ -62,12 +57,12 @@ public class Board {
 		this.modifiedDate = modifiedDate;
 	}
 
-	public void setUser(User user) {
-		this.user = user;
+	public User getUserBoardOwner() {
+		return userBoardOwner;
 	}
 
-	public User getUser() {
-		return user;
+	public void setUserBoardOwner(User userBoardOwner) {
+		this.userBoardOwner = userBoardOwner;
 	}
 
 	public String getFileName() {
@@ -79,15 +74,6 @@ public class Board {
 	}
 
 	public Board() {
-	}
-
-	public Board(@NotBlank String title, @NotBlank String description, @NotBlank String userId,
-			@NotNull List<BoardComment> boardComments, @NotNull List<DateTimeSlot> displayDetails) {
-		this.title = title;
-		this.description = description;
-		this.userId = userId;
-		this.boardComments = boardComments;
-		this.displayDetails = displayDetails;
 	}
 
 	public String getId() {
@@ -128,14 +114,6 @@ public class Board {
 
 	public void setBoardComments(List<BoardComment> boardComments) {
 		this.boardComments = boardComments;
-	}
-
-	public List<DateTimeSlot> getDisplayDetails() {
-		return displayDetails;
-	}
-
-	public void setDisplayDetails(List<DateTimeSlot> displayDetails) {
-		this.displayDetails = displayDetails;
 	}
 
 }

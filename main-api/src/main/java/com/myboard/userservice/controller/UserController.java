@@ -26,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.myboard.userservice.dto.SelectLocationDTO;
 import com.myboard.userservice.dto.SignupRequest;
 import com.myboard.userservice.dto.UserProfileDTO;
-import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.entity.Location;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.entity.UserProfile;
@@ -55,21 +54,16 @@ public class UserController {
 
 	@PostMapping("/signup")
 	public ResponseEntity<String> signup(@RequestBody SignupRequest signupRequest) {
-		// Validate signup request (e.g., check if username is available, password
-		// requirements)
 
-		// Check if a user with the same username already exists
 		if (userRepository.findByUsername(signupRequest.getUsername()) != null) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
 		}
 
-		// Create a new user entity and populate its fields
 		User user = new User();
 		user.setUsername(signupRequest.getUsername());
 		String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
 		user.setPassword(encodedPassword);
 
-		// Save the user in the database
 		userRepository.save(user);
 
 		return ResponseEntity.status(HttpStatus.OK).body("User registered successfully");
@@ -139,13 +133,6 @@ public class UserController {
 		}
 	}
 
-	@GetMapping("approvalRequest/{username}")
-	public Map<String, List<Board>> getApprovalRequestsForUser(String username) {
-		User userDetails = userRepository.findByUsername(username);
-		Map<String, List<Board>> approvalsRequiredMap = userDetails.getApprovalsRequiredMap();
-		return approvalsRequiredMap;
-	}
-
 	@PostMapping("/save-location")
 	public ResponseEntity<?> savePrimaryLocation(@RequestBody @Valid SelectLocationDTO selectLocationDTO) {
 		userService.saveLocationForLoggedInUser(selectLocationDTO);
@@ -212,7 +199,6 @@ public class UserController {
 		}
 	}
 
-	// Method to convert UserProfile to UserProfileDTO
 	private UserProfileDTO convertToDTO(UserProfile userProfile) {
 		UserProfileDTO userProfileDTO = new UserProfileDTO();
 		userProfileDTO.setFirstName(userProfile.getFirstName());

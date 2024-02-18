@@ -13,7 +13,7 @@ myboard:
     profile-pic-path: C:/Users/vipin/development/myboard-uploaded-data/user/profile-pic
   display:
     path: C:/Users/vipin/development/myboard-uploaded-data/display
-    timeSlotInterval: 60
+    timeSlotInterval: 5
   board:
     path: C:/Users/vipin/development/myboard-uploaded-data/board
   map:

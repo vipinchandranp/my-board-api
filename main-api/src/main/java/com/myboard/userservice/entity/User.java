@@ -1,10 +1,8 @@
 package com.myboard.userservice.entity;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -31,18 +29,29 @@ public class User implements UserDetails {
 
 	private String password;
 
-	private Map<String, List<Board>> approvalsRequiredMap = new HashMap<String, List<Board>>();
-
 	private Set<String> roles = new HashSet<>();
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-	private List<DisplayDetails> displays;
+	private List<Display> displays;
 
 	@OneToOne(cascade = CascadeType.ALL, mappedBy = "user")
 	private Location location;
 
 	@OneToOne(mappedBy = "user")
 	private UserProfile userProfile;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
+	private List<Board> boards;
+
+	// Getters and setters for all fields...
+
+	public List<Board> getBoards() {
+		return boards;
+	}
+
+	public void setBoards(List<Board> boards) {
+		this.boards = boards;
+	}
 
 	// Getters and setters for all fields
 
@@ -62,11 +71,11 @@ public class User implements UserDetails {
 		this.location = location;
 	}
 
-	public List<DisplayDetails> getDisplays() {
+	public List<Display> getDisplays() {
 		return displays;
 	}
 
-	public void setDisplays(List<DisplayDetails> displays) {
+	public void setDisplays(List<Display> displays) {
 		this.displays = displays;
 	}
 
@@ -82,14 +91,6 @@ public class User implements UserDetails {
 		this.username = username;
 		this.password = password;
 		this.roles = roles;
-	}
-
-	public Map<String, List<Board>> getApprovalsRequiredMap() {
-		return approvalsRequiredMap;
-	}
-
-	public void setApprovalsRequiredMap(Map<String, List<Board>> approvalsRequiredMap) {
-		this.approvalsRequiredMap = approvalsRequiredMap;
 	}
 
 	public String getId() {

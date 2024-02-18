@@ -28,7 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.myboard.userservice.dto.SelectLocationDTO;
 import com.myboard.userservice.dto.TimeSlotAvailabilityDTO;
-import com.myboard.userservice.entity.DisplayDetails;
+import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.entity.TimeSlotAvailability;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.DisplayNotFoundException;
@@ -57,7 +57,7 @@ public class DisplayServiceImpl implements DisplayService {
 	private UserRepository userRepository;
 
 	@Override
-	public void saveDisplay(DisplayDetails displayDetails, MultipartFile imageFile) {
+	public void saveDisplay(Display displayDetails, MultipartFile imageFile) {
 		// Get the directory path from the property
 		String directoryPath = environment.getProperty("myboard.display.path");
 
@@ -65,16 +65,16 @@ public class DisplayServiceImpl implements DisplayService {
 		User loggedInUser = SecurityUtils.getLoggedInUser();
 
 		// Initialize userDisplays if it is null
-		List<DisplayDetails> userDisplays = loggedInUser.getDisplays();
+		List<Display> userDisplays = loggedInUser.getDisplays();
 		if (userDisplays == null) {
 			userDisplays = new ArrayList<>();
 		}
 
 		// Set the user for the display
-		displayDetails.setUser(loggedInUser);
+		displayDetails.setUserDisplayOwner(loggedInUser);
 
 		// Save the displayDetails to obtain the ID from MongoDB
-		DisplayDetails savedDisplay = displayRepository.save(displayDetails);
+		Display savedDisplay = displayRepository.save(displayDetails);
 
 		// Ensure displayDetails has a valid ID
 		if (savedDisplay.getId() == null) {
@@ -131,7 +131,7 @@ public class DisplayServiceImpl implements DisplayService {
 
 	@Override
 	public byte[] getDisplayImage(String displayId) {
-		DisplayDetails displayDetails = displayRepository.findById(displayId)
+		Display displayDetails = displayRepository.findById(displayId)
 				.orElseThrow(() -> new DisplayNotFoundException("Display not found with ID: " + displayId));
 
 		// Load the image file content
@@ -162,9 +162,9 @@ public class DisplayServiceImpl implements DisplayService {
 	}
 
 	@Override
-	public List<DisplayDetails> getAllDisplays() {
-		Iterable<DisplayDetails> displayIterable = displayRepository.findAll();
-		List<DisplayDetails> displayList = new ArrayList<>();
+	public List<Display> getAllDisplays() {
+		Iterable<Display> displayIterable = displayRepository.findAll();
+		List<Display> displayList = new ArrayList<>();
 		displayIterable.forEach(displayList::add);
 		return displayList;
 	}
@@ -175,7 +175,7 @@ public class DisplayServiceImpl implements DisplayService {
 	}
 
 	@Override
-	public List<DisplayDetails> getAllDisplaysForLoggedInUser() {
+	public List<Display> getAllDisplaysForLoggedInUser() {
 		try {
 			// Retrieve the logged-in user
 			User loggedInUser = SecurityUtils.getLoggedInUser();
@@ -183,7 +183,7 @@ public class DisplayServiceImpl implements DisplayService {
 			// Check if the user is not null
 			if (loggedInUser != null) {
 				// Retrieve displays for the logged-in user
-				List<DisplayDetails> userDisplays = loggedInUser.getDisplays();
+				List<Display> userDisplays = loggedInUser.getDisplays();
 				if (userDisplays != null) {
 					return userDisplays;
 				}
@@ -202,13 +202,13 @@ public class DisplayServiceImpl implements DisplayService {
 	}
 
 	@Override
-	public DisplayDetails getDisplay(String displayId) {
-		DisplayDetails displayDetails = displayRepository.findById(displayId)
+	public Display getDisplay(String displayId) {
+		Display displayDetails = displayRepository.findById(displayId)
 				.orElseThrow(() -> new DisplayNotFoundException("Display not found with ID: " + displayId));
 		return displayDetails;
 	}
 
-	public List<DisplayDetails> getDisplaysNearby(SelectLocationDTO locationDTO, double radius) {
+	public List<Display> getDisplaysNearby(SelectLocationDTO locationDTO, double radius) {
 		// Create a GeoJsonPoint from the given latitude and longitude
 		GeoJsonPoint geoJsonPoint = new GeoJsonPoint(locationDTO.getLongitude(), locationDTO.getLatitude());
 
@@ -219,20 +219,19 @@ public class DisplayServiceImpl implements DisplayService {
 		Query query = Query.query(Criteria.where("location").withinSphere(circle));
 
 		// Execute the query
-		return mongoTemplate.find(query, DisplayDetails.class);
+		return mongoTemplate.find(query, Display.class);
 	}
 
 	@Override
 	public TimeSlotAvailabilityDTO getDisplayTimeSlots(String displayId, LocalDate date) {
-		DisplayDetails displayDetails = displayRepository.findById(displayId)
+		Display displayDetails = displayRepository.findById(displayId)
 				.orElseThrow(() -> new DisplayNotFoundException("Display not found with ID: " + displayId));
 
 		// Check if the dateToTimeSlots map is not null
 		Map<LocalDate, TimeSlotAvailability> dateToTimeSlots = displayDetails.getDateToTimeSlots();
 		if (dateToTimeSlots != null) {
 			// Retrieve time slots for the specified date
-			TimeSlotAvailability timeSlotAvailability = dateToTimeSlots.getOrDefault(date,
-					new TimeSlotAvailability(Collections.emptyList(), Collections.emptyList()));
+			TimeSlotAvailability timeSlotAvailability = dateToTimeSlots.getOrDefault(date, new TimeSlotAvailability());
 
 			// Get available and booked time slots
 			List<String> allTimeSlots = generateTimeSlots();
