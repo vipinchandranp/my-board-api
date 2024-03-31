@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,10 +19,13 @@ import org.springframework.stereotype.Service;
 import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.entity.DisplayTimeSlot;
+import com.myboard.userservice.entity.PlayAudit;
 import com.myboard.userservice.entity.TimeSlotAvailability;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.BoardRepository;
-import com.myboard.userservice.repository.DateTimeSlotRepository;
+import com.myboard.userservice.repository.DisplayRepository;
+import com.myboard.userservice.repository.DisplayTimeSlotRepository;
+import com.myboard.userservice.repository.PlayAuditRepository;
 import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.SecurityUtils;
 
@@ -32,16 +35,19 @@ import net.glxn.qrgen.QRCode;
 public class PlayServiceImpl implements PlayService {
 
 	@Autowired
-	private DisplayService displayService;
+	private DisplayRepository displayRepository;
 
 	@Autowired
 	private UserRepository userRepository;
 
 	@Autowired
-	private DateTimeSlotRepository dateTimeSlotRepository;
+	private DisplayTimeSlotRepository displayTimeSlotRepository;
 
 	@Autowired
 	private BoardRepository boardRepository;
+
+	@Autowired
+	private PlayAuditRepository playAuditRepository;
 
 	@Value("${myboard.board.path}")
 	private String boardImagesPath;
@@ -54,7 +60,7 @@ public class PlayServiceImpl implements PlayService {
 			LocalTime currentTime = LocalTime.now();
 
 			User loggedInUser = SecurityUtils.getLoggedInUser();
-			List<DisplayTimeSlot> timeSlots = dateTimeSlotRepository.findByDisplayOwnerUser(loggedInUser);
+			List<DisplayTimeSlot> timeSlots = displayTimeSlotRepository.findByDisplayOwnerUser(loggedInUser);
 
 			Display display = null;
 			// Iterate through the retrieved time slots
@@ -68,11 +74,13 @@ public class PlayServiceImpl implements PlayService {
 					LocalTime startTime = LocalTime.parse(timeSlotStr.split("-")[0].trim());
 					LocalTime endTime = LocalTime.parse(timeSlotStr.split("-")[1].trim());
 
-					if (currentTime.isAfter(startTime) && currentTime.isBefore(endTime)) {
+					if (timeSlot.getApproved() && currentTime.isAfter(startTime) && currentTime.isBefore(endTime)) {
 						// If the current time is within a booked time slot, retrieve the corresponding
 						// board image
 						// Retrieve the image bytes for the board
-						return getImageBytes(timeSlot.getBoard().getId());
+						String boardId = timeSlot.getBoard().getId();
+						savePlayAudit(timeSlot.getId());
+						return getImageBytes(boardId);
 					}
 				}
 			}
@@ -120,44 +128,20 @@ public class PlayServiceImpl implements PlayService {
 		throw new RuntimeException("Image not found for Board ID: " + boardId);
 	}
 
-	private List<Display> getUserDisplays(String userId) {
-		User loggedInUser = userRepository.findById(userId)
-				.orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-		return loggedInUser.getDisplays();
-	}
+	@Override
+	public void savePlayAudit(String displayTimeSlotId) {
+		// Retrieve DisplayTimeSlot object from repository
+		DisplayTimeSlot displayTimeSlot = displayTimeSlotRepository.findById(displayTimeSlotId)
+				.orElseThrow(() -> new NoSuchElementException("DisplayTimeSlot not found"));
 
-	private DisplayTimeSlot findTimeSlotByDisplayAndTime(String userId, String displayId, String timeSlot) {
-		// Query the database for the DateTimeSlot
-		User user = userRepository.findById(userId)
-				.orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+		// Create a new PlayAudit object
+		PlayAudit playAudit = new PlayAudit();
 
-		// Assuming each user has multiple displays, find the display with the given
-		// displayId
-		Display display = user.getDisplays().stream().filter(d -> d.getId().equals(displayId)).findFirst().orElse(null);
+		// Assign the retrieved DisplayTimeSlot object to the PlayAudit object
+		playAudit.setDisplayTimeSlot(displayTimeSlot);
 
-		if (display == null) {
-			// Display not found
-			return null;
-		}
-
-		// Find the DateTimeSlot for the given display and time slot
-		Map<LocalDate, TimeSlotAvailability> dateToTimeSlots = display.getDateToTimeSlots();
-		for (Map.Entry<LocalDate, TimeSlotAvailability> entry : dateToTimeSlots.entrySet()) {
-			TimeSlotAvailability timeSlotAvailability = entry.getValue();
-			List<String> availableTimeSlots = timeSlotAvailability.getAvailableTimeSlots();
-			if (availableTimeSlots.contains(timeSlot)) {
-				// Assuming the time slot matches the format used in the available time slots
-				LocalDate date = entry.getKey();
-				DisplayTimeSlot dateTimeSlot = new DisplayTimeSlot();
-				dateTimeSlot.setDate(date);
-				dateTimeSlot.setStartTime(LocalTime.parse(timeSlot.split("-")[0].trim()));
-				dateTimeSlot.setEndTime(LocalTime.parse(timeSlot.split("-")[1].trim()));
-				return dateTimeSlot;
-			}
-		}
-
-		// Time slot not found for the given display
-		return null;
+		// Save the PlayAudit object
+		playAuditRepository.save(playAudit);
 	}
 
 }

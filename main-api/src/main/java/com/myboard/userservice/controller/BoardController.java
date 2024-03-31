@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.myboard.userservice.dto.BoardWithImage;
+import com.myboard.userservice.dto.BoardWithImageDTO;
 import com.myboard.userservice.dto.DisplayDateTimeSlotDTO;
 import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.entity.User;
@@ -46,7 +46,7 @@ public class BoardController {
 
 	@PostMapping(value = "/save", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
 	public ResponseEntity<String> createBoard(@RequestParam("boardTitle") String boardTitle,
-			@RequestParam("boardDesc") String boardDesc, @RequestParam("displayDetails") String displayDetailsJson,
+			@RequestParam("displayDetails") String displayDetailsJson,
 			@RequestPart("imageFile") MultipartFile imageFile) {
 		// Save the board using the boardService
 		try {
@@ -54,7 +54,7 @@ public class BoardController {
 			DisplayDateTimeSlotDTO displayDateTimeSlotDTO = objectMapper.readValue(displayDetailsJson,
 					DisplayDateTimeSlotDTO.class);
 
-			Board savedBoard = boardService.saveBoard(boardTitle, boardDesc, displayDateTimeSlotDTO, imageFile);
+			Board savedBoard = boardService.saveBoard(boardTitle, null, displayDateTimeSlotDTO, imageFile);
 
 			if (savedBoard != null) {
 				return ResponseEntity.status(HttpStatus.CREATED).body("Board created successfully");
@@ -76,9 +76,6 @@ public class BoardController {
 	@GetMapping("/details/{boardId}")
 	public void getBoardDetailsById(@PathVariable String boardId, HttpServletResponse response) {
 		try {
-			// Call the boardService to get details based on boardId
-			Board boardDetails = boardService.getBoardDetailsById(boardId);
-
 			// Fetch image bytes
 			byte[] imageBytes = boardService.getImageBytes(boardId);
 
@@ -99,13 +96,13 @@ public class BoardController {
 	}
 
 	@GetMapping("/items")
-	public ResponseEntity<List<BoardWithImage>> getBoardItemsForUser(@RequestParam int page, @RequestParam int size) {
+	public ResponseEntity<List<BoardWithImageDTO>> getBoardItemsForUser(@RequestParam int page, @RequestParam int size) {
 		try {
 			User loggedInUser = SecurityUtils.getLoggedInUser();
-			Page<BoardWithImage> boardPage = boardService.getBoardItemsForUser(loggedInUser.getId(),
+			Page<BoardWithImageDTO> boardPage = boardService.getBoardItemsForUser(loggedInUser,
 					PageRequest.of(page - 1, size));
 
-			List<BoardWithImage> boardList = boardPage.getContent();
+			List<BoardWithImageDTO> boardList = boardPage.getContent();
 			return ResponseEntity.ok(boardList);
 		} catch (Exception e) {
 			// Log the exception or handle it based on your requirements

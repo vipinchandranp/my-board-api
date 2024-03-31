@@ -49,14 +49,12 @@ public class DisplayController {
 	}
 
 	@PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<String> saveDisplay(@RequestPart("displayName") String displayName,
-			@RequestPart("description") String description, @RequestPart("latitude") String latitude,
+	public ResponseEntity<String> saveDisplay(@RequestPart("displayName") String displayName, @RequestPart("latitude") String latitude,
 			@RequestPart("longitude") String longitude, @RequestPart("imageFile") MultipartFile imageFile) {
 		try {
 			// Save the display details to MongoDB
 			Display displayDetails = new Display();
 			displayDetails.setName(displayName);
-			displayDetails.setDescription(description);
 			displayDetails.setLatitude(Double.valueOf(latitude));
 			displayDetails.setLongitude(Double.valueOf(longitude));
 

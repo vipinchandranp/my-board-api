@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.myboard.userservice.dto.SelectLocationDTO;
-import com.myboard.userservice.dto.SignupRequest;
+import com.myboard.userservice.dto.SignupRequestDTO;
 import com.myboard.userservice.dto.UserProfileDTO;
 import com.myboard.userservice.entity.Location;
 import com.myboard.userservice.entity.User;
@@ -53,7 +53,7 @@ public class UserController {
 	}
 
 	@PostMapping("/signup")
-	public ResponseEntity<String> signup(@RequestBody SignupRequest signupRequest) {
+	public ResponseEntity<String> signup(@RequestBody SignupRequestDTO signupRequest) {
 
 		if (userRepository.findByUsername(signupRequest.getUsername()) != null) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
@@ -178,6 +178,24 @@ public class UserController {
 		}
 	}
 
+	@GetMapping("/profile-pic/{userId}")
+	public ResponseEntity<byte[]> getProfilePic(@PathVariable String userId) {
+		try {
+			// Get the profile picture content
+			byte[] profilePicContent = userService.getProfilePic();
+
+			// Set the appropriate content type for the response
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.IMAGE_JPEG);
+
+			// Return the profile picture content in the response entity
+			return new ResponseEntity<>(profilePicContent, headers, HttpStatus.OK);
+		} catch (Exception e) {
+			// Handle exceptions appropriately
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
 	@GetMapping("/user-profile")
 	public ResponseEntity<?> getUserProfile() {
 		try {
@@ -186,6 +204,12 @@ public class UserController {
 
 			// Get the user profile details
 			UserProfile userProfile = loggedInUser.getUserProfile();
+
+			if (userProfile == null) {
+				// If user profile is null, return an empty user profile
+				UserProfileDTO emptyProfileDTO = new UserProfileDTO();
+				return ResponseEntity.ok(emptyProfileDTO);
+			}
 
 			// Convert UserProfile to UserProfileDTO
 			UserProfileDTO userProfileDTO = convertToDTO(userProfile);

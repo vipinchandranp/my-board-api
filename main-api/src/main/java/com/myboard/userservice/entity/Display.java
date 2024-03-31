@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "display")
-public class Display {
+public class Display extends SuperEntity {
 
 	@Id
 	private String id;

@@ -1,9 +1,9 @@
 package com.myboard.userservice.dto;
 
-public class AuthenticationResponse {
+public class AuthenticationResponseDTO {
     private final String jwt;
 
-    public AuthenticationResponse(String jwt) {
+    public AuthenticationResponseDTO(String jwt) {
         this.jwt = jwt;
     }
 

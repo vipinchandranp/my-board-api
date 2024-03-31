@@ -233,20 +233,19 @@ public class DisplayServiceImpl implements DisplayService {
 			// Retrieve time slots for the specified date
 			TimeSlotAvailability timeSlotAvailability = dateToTimeSlots.getOrDefault(date, new TimeSlotAvailability());
 
-			// Get available and booked time slots
+			// Get all time slots
 			List<String> allTimeSlots = generateTimeSlots();
-			List<String> availableTimeSlots;
 
-			if (timeSlotAvailability.getAvailableTimeSlots().isEmpty()
-					&& timeSlotAvailability.getBookedTimeSlots().isEmpty()) {
-				// If both lists are empty, set available time slots to the full list of time
-				// slots
-				availableTimeSlots = new ArrayList<>(allTimeSlots);
-			} else {
-				availableTimeSlots = timeSlotAvailability.getAvailableTimeSlots();
-			}
-
+			// Get booked time slots
 			List<String> bookedTimeSlots = timeSlotAvailability.getBookedTimeSlots();
+
+			// Create available time slots by removing booked time slots from all time slots
+			List<String> availableTimeSlots = new ArrayList<>();
+			for (String timeSlot : allTimeSlots) {
+				if (!bookedTimeSlots.contains(timeSlot)) {
+					availableTimeSlots.add(timeSlot);
+				}
+			}
 
 			// Create an instance of TimeSlotAvailabilityDTO and return
 			return new TimeSlotAvailabilityDTO(date, availableTimeSlots, bookedTimeSlots);
@@ -256,7 +255,6 @@ public class DisplayServiceImpl implements DisplayService {
 		return new TimeSlotAvailabilityDTO(date, Collections.emptyList(), Collections.emptyList());
 	}
 
-	// Method to generate time slots based on configured time slot interval
 	private List<String> generateTimeSlots() {
 		// Retrieve the time slot interval from the property file
 		String timeSlotInterval = environment.getProperty("myboard.display.timeSlotInterval");
@@ -270,8 +268,15 @@ public class DisplayServiceImpl implements DisplayService {
 
 		int interval = Integer.parseInt(timeSlotInterval);
 		for (int minutes = 0; minutes < totalMinutesInDay; minutes += interval) {
-			// Format the time slot as needed
-			timeSlots.add(String.format("%02d:%02d", minutes / 60, minutes % 60));
+			// Calculate start and end times for each time slot
+			int startTimeMinutes = minutes;
+			int endTimeMinutes = minutes + interval;
+
+			// Format the time slot as start and end times separated by a hyphen
+			String timeSlot = String.format("%02d:%02d-%02d:%02d", startTimeMinutes / 60, startTimeMinutes % 60,
+					endTimeMinutes / 60, endTimeMinutes % 60);
+			// Add the formatted time slot to the list
+			timeSlots.add(timeSlot);
 		}
 
 		return timeSlots;

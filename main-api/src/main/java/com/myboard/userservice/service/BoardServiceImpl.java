@@ -24,17 +24,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.myboard.userservice.dto.BoardDTO;
-import com.myboard.userservice.dto.BoardWithImage;
+import com.myboard.userservice.dto.BoardWithImageDTO;
 import com.myboard.userservice.dto.DateTimeSlotDTO;
 import com.myboard.userservice.dto.DisplayDateTimeSlotDTO;
 import com.myboard.userservice.entity.Board;
-import com.myboard.userservice.entity.DisplayTimeSlot;
 import com.myboard.userservice.entity.Display;
+import com.myboard.userservice.entity.DisplayTimeSlot;
 import com.myboard.userservice.entity.TimeSlotAvailability;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.BoardRepository;
-import com.myboard.userservice.repository.DateTimeSlotRepository;
 import com.myboard.userservice.repository.DisplayRepository;
+import com.myboard.userservice.repository.DisplayTimeSlotRepository;
 import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.SecurityUtils;
 
@@ -45,7 +45,7 @@ public class BoardServiceImpl implements BoardService {
 
 	private final UserRepository userRepository;
 
-	private final DateTimeSlotRepository dateTimeSlotRepository;
+	private final DisplayTimeSlotRepository displayTimeSlotRepository;
 
 	private final DisplayRepository displayRepository;
 
@@ -54,10 +54,10 @@ public class BoardServiceImpl implements BoardService {
 
 	@Autowired
 	public BoardServiceImpl(BoardRepository boardRepository, UserRepository userRepository,
-			DateTimeSlotRepository dateTimeSlotRepository, DisplayRepository displayRepository) {
+			DisplayTimeSlotRepository dateTimeSlotRepository, DisplayRepository displayRepository) {
 		this.boardRepository = boardRepository;
 		this.userRepository = userRepository;
-		this.dateTimeSlotRepository = dateTimeSlotRepository;
+		this.displayTimeSlotRepository = dateTimeSlotRepository;
 		this.displayRepository = displayRepository;
 	}
 
@@ -103,7 +103,7 @@ public class BoardServiceImpl implements BoardService {
 				dateTimeSlot.setBoardOwnerUser(loggedInUser);
 				dateTimeSlot.setDisplayOwnerUser(displayDetails.getUserDisplayOwner());
 				// Save the DateTimeSlot entity to MongoDB
-				dateTimeSlotRepository.save(dateTimeSlot);
+				displayTimeSlotRepository.save(dateTimeSlot);
 			}
 
 			// Update the display entity with the modified availability slots
@@ -132,7 +132,7 @@ public class BoardServiceImpl implements BoardService {
 		userBoards.add(board);
 		// Set the updated list of boards back to the user
 		loggedInUser.setBoards(userBoards);
-
+		userRepository.save(loggedInUser);
 		return savedBoard;
 	}
 
@@ -187,19 +187,26 @@ public class BoardServiceImpl implements BoardService {
 	}
 
 	@Override
-	public Page<BoardWithImage> getBoardItemsForUser(String userId, Pageable pageable) {
+	public Page<BoardWithImageDTO> getBoardItemsForUser(User user, Pageable pageable) {
 		// Retrieve the paged board items from the repository
-		Page<Board> boardPage = boardRepository.findByUserId(userId, pageable);
+		List<Board> boards = user.getBoards();
 
 		// Map each Board to BoardWithImage, including image bytes
-		List<BoardWithImage> boardsWithImage = boardPage.getContent().stream().map(this::mapBoardToBoardWithImage)
+		List<BoardWithImageDTO> boardsWithImage = boards.stream().map(board -> mapBoardToBoardWithImage(board))
 				.collect(Collectors.toList());
 
+		// Calculate pagination indices
+		int start = (int) pageable.getOffset();
+		int end = Math.min((start + pageable.getPageSize()), boardsWithImage.size());
+
+		// Slice the list based on pagination indices
+		List<BoardWithImageDTO> pagedBoards = boardsWithImage.subList(start, end);
+
 		// Create a new Page with the mapped content and original pageable information
-		return new PageImpl<>(boardsWithImage, pageable, boardPage.getTotalElements());
+		return new PageImpl<>(pagedBoards, pageable, boardsWithImage.size());
 	}
 
-	private BoardWithImage mapBoardToBoardWithImage(Board board) {
+	private BoardWithImageDTO mapBoardToBoardWithImage(Board board) {
 		// Map the Board entity to a simplified BoardDTO
 		BoardDTO boardDTO = mapBoardToBoardDTO(board);
 
@@ -208,7 +215,7 @@ public class BoardServiceImpl implements BoardService {
 
 		// Create a new BoardWithImage instance with the simplified BoardDTO and image
 		// bytes
-		return new BoardWithImage(boardDTO, imageBytes);
+		return new BoardWithImageDTO(boardDTO, imageBytes);
 	}
 
 	private BoardDTO mapBoardToBoardDTO(Board board) {

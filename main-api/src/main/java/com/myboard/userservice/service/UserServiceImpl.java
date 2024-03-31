@@ -170,4 +170,41 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
+	@Override
+	public byte[] getProfilePic(String userId) {
+
+		// Retrieve the profile picture file name from the user's profile
+
+		User user = userRepository.findById(userId).orElseThrow();
+		String profilePicFileName = null;
+		UserProfile userProfile = user.getUserProfile();
+		if (userProfile != null) {
+			profilePicFileName = userProfile.getProfilePicName();
+		}
+
+		// Check if the profile picture file name is available
+		if (profilePicFileName == null || profilePicFileName.isEmpty()) {
+			throw new ProfilePictureNotFoundException(
+					"Profile picture not found for user: " + user.getUsername());
+		}
+
+		// Construct the profile picture file path
+		String profilePicFilePath = profilePicPath + "/" + profilePicFileName;
+
+		// Check if the file exists
+		Path path = Paths.get(profilePicFilePath);
+		if (!Files.exists(path)) {
+			throw new ProfilePictureNotFoundException(
+					"Profile picture not found for user: " + user.getUsername());
+		}
+
+		// Read the profile picture file as bytes
+		try {
+			return Files.readAllBytes(path);
+		} catch (IOException e) {
+			throw new ProfilePictureReadException(
+					"Failed to read profile picture for user: " + user.getUsername(), e);
+		}
+	}
+
 }

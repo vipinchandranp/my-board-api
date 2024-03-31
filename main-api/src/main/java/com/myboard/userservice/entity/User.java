@@ -15,7 +15,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Document(collection = "users")
-public class User implements UserDetails {
+public class User extends SuperEntity implements UserDetails {
 
 	/**
 	 * 

@@ -51,7 +51,10 @@ public class GoogleMapsController {
 					String formattedAddress = result.has("formatted_address") ? result.get("formatted_address").asText()
 							: name; // Use name if formatted address is not available
 					// Create a DTO object
-					SelectLocationDTO selectLocationDTO = new SelectLocationDTO(formattedAddress, latitude, longitude);
+					SelectLocationDTO selectLocationDTO = new SelectLocationDTO();
+					selectLocationDTO.setName(formattedAddress);
+					selectLocationDTO.setLongitude(longitude);
+					selectLocationDTO.setLatitude(latitude);
 					resultDTOList.add(selectLocationDTO);
 				}
 

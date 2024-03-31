@@ -3,9 +3,14 @@ spring:
     mongodb:
       #uri: mongodb://cosmosrgeastusc0f3d675-784f-433e-9759db:8m9xC4DakRGbV5gWeOaOLaSPszKwQETdYjwVzmC6AsgbHo5IMrXqh43JsprmlGcGnIIdNmhhOfVZACDbXbuajw==@cosmosrgeastusc0f3d675-784f-433e-9759db.mongo.cosmos.azure.com:10255/myboard-database?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@cosmosrgeastusc0f3d675-784f-433e-9759db@
       uri: mongodb://localhost:27017/userdb
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: myboard
+
 logging.level.org.springframework.security: DEBUG
 spring.servlet.multipart.max-file-size: 50MB
-spring.servlet.multipart.enabled: true
+spring.servlet.multipart.e nabled: true
 spring.servlet.multipart.max-request-size: 50MB
 
 myboard:
@@ -13,7 +18,7 @@ myboard:
     profile-pic-path: C:/Users/vipin/development/myboard-uploaded-data/user/profile-pic
   display:
     path: C:/Users/vipin/development/myboard-uploaded-data/display
-    timeSlotInterval: 5
+    timeSlotInterval: 15
   board:
     path: C:/Users/vipin/development/myboard-uploaded-data/board
   map:

@@ -13,7 +13,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Document(collection = "boards")
-public class Board {
+public class Board extends SuperEntity{
 
 	@Id
 	private String id;

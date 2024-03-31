@@ -16,5 +16,7 @@ public interface UserService {
 	public Map<String, Object> initializeUser();
 	
 	public byte[] getProfilePic();
+	public byte[] getProfilePic(String userId);
+
 
 }

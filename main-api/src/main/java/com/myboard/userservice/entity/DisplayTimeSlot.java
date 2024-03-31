@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Document(collection = "dateTimeSlots")
-public class DisplayTimeSlot extends BoardEntity {
+public class DisplayTimeSlot extends SuperEntity {
 
 	@Id
 	private String id;
@@ -34,6 +34,17 @@ public class DisplayTimeSlot extends BoardEntity {
 
 	@DBRef
 	private Display display;
+
+	private Boolean approved = false;
+	
+
+	public Boolean getApproved() {
+		return approved;
+	}
+
+	public void setApproved(Boolean approved) {
+		this.approved = approved;
+	}
 
 	public String getId() {
 		return id;
