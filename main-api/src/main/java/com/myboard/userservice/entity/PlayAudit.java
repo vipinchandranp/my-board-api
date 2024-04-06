@@ -1,9 +1,12 @@
 package com.myboard.userservice.entity;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+@EqualsAndHashCode(callSuper = true)
+@Data
 @Document(collection = "play_audit")
 public class PlayAudit extends SuperEntity {
 
@@ -14,22 +17,6 @@ public class PlayAudit extends SuperEntity {
 	private DisplayTimeSlot displayTimeSlot;
 
 	public PlayAudit() {
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public DisplayTimeSlot getDisplayTimeSlot() {
-		return displayTimeSlot;
-	}
-
-	public void setDisplayTimeSlot(DisplayTimeSlot displayTimeSlot) {
-		this.displayTimeSlot = displayTimeSlot;
 	}
 
 }

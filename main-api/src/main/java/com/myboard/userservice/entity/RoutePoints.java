@@ -1,9 +1,9 @@
-package com.myboard.userservice.dto;
+package com.myboard.userservice.entity;
 
 import lombok.Data;
 
 @Data
-public class RoutePointsDTO {
+public class RoutePoints {
     private double latitude;
     private double longitude;
 

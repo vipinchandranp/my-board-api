@@ -9,11 +9,14 @@ import javax.persistence.CascadeType;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
+@EqualsAndHashCode(callSuper = true)
+@Data
 @Document(collection = "users")
 public class User extends SuperEntity implements UserDetails {
 

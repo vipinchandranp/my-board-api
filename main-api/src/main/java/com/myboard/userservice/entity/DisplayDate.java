@@ -1,6 +1,8 @@
 package com.myboard.userservice.entity;
-import java.util.List;
+import lombok.Data;
 
+import java.util.List;
+@Data
 public class DisplayDate {
 
     private String date; // You may use a specific Date type or String as per your needs
@@ -20,30 +22,4 @@ public class DisplayDate {
         this.notAvailableTimeSlots = notAvailableTimeSlots;
     }
 
-    // Getters and setters
-    // ...
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public List<String> getAvailableTimeSlots() {
-        return availableTimeSlots;
-    }
-
-    public void setAvailableTimeSlots(List<String> availableTimeSlots) {
-        this.availableTimeSlots = availableTimeSlots;
-    }
-
-    public List<String> getNotAvailableTimeSlots() {
-        return notAvailableTimeSlots;
-    }
-
-    public void setNotAvailableTimeSlots(List<String> notAvailableTimeSlots) {
-        this.notAvailableTimeSlots = notAvailableTimeSlots;
-    }
 }

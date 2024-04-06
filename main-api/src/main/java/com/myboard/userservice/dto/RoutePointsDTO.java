@@ -3,7 +3,7 @@ package com.myboard.userservice.dto;
 import lombok.Data;
 
 @Data
-public class LocationDTO {
+public class RoutePointsDTO {
     private double latitude;
     private double longitude;
 

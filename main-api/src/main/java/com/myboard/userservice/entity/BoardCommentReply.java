@@ -1,8 +1,9 @@
 package com.myboard.userservice.entity;
 
+import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+@Data
 @Document(collection = "replies")
 public class BoardCommentReply {
 
@@ -24,35 +25,4 @@ public class BoardCommentReply {
 		this.commentId = commentId;
 	}
 
-	public String getCommentId() {
-		return commentId;
-	}
-
-	public void setCommentId(String commentId) {
-		this.commentId = commentId;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String text) {
-		this.text = text;
-	}
-
-	public String getUserId() {
-		return userId;
-	}
-
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
 }

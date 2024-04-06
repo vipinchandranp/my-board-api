@@ -1,5 +1,8 @@
 package com.myboard.userservice.dto;
 
+import lombok.Data;
+
+@Data
 public class AuthenticationResponseDTO {
     private final String jwt;
 
