@@ -1,26 +1,15 @@
 package com.myboard.userservice.entity;
 
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
+
 @Data
-@Document(collection = "locations")
 public class Location {
 
-    @Id
-    private String id;
-
     private String name;
-    private double latitude;
-    private double longitude;
 
-    public Location() {
-    }
-
-    public Location(String name, double latitude, double longitude) {
-        this.name = name;
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
+    @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
+    private double[] location;
 
 }

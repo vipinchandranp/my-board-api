@@ -4,6 +4,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import com.myboard.userservice.entity.Display;
 
-public interface DisplayRepository extends MongoRepository<Display, String> {
+public interface DisplayRepository extends MongoRepository<Display, Long> {
 	// You can add custom query methods if needed
 }

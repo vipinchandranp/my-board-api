@@ -2,6 +2,7 @@ package com.myboard.userservice.security;
 
 import java.io.IOException;
 
+import com.myboard.userservice.service.MyBoardUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,8 +10,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import com.myboard.userservice.service.MyUserDetailsService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,7 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtRequestFilter extends OncePerRequestFilter {
 
 	@Autowired
-	private MyUserDetailsService userDetailsService;
+	private MyBoardUserDetailsService userDetailsService;
 
 	@Autowired
 	private JwtUtil jwtUtil;
@@ -34,7 +33,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 		String requestUri = request.getRequestURI();
 
 		// Exclude the filter for the login endpoint
-		if (!requestUri.endsWith("/v1/users/login")) {
+		if (!requestUri.endsWith("/v1/myboard/user/login")) {
 			final String authorizationHeader = request.getHeader("Authorization");
 
 			String username = null;

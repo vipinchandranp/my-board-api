@@ -1,155 +1,61 @@
 package com.myboard.userservice.entity;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.CascadeType;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-@EqualsAndHashCode(callSuper = true)
+import org.springframework.data.mongodb.core.mapping.DBRef;
+
+import javax.persistence.*;
+import java.util.*;
+import java.util.stream.Collectors;
+
 @Data
-@Document(collection = "users")
-public class User extends SuperEntity implements UserDetails {
+@Document(collection = "user")
+public class User implements UserDetails {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+    @Id
+    private String id;
+    private Location selectedLocation;
+    private String username;
+    private String password;
 
-	@Id
-	private String id;
+    private UserProfile userProfile;
 
-	private String username;
+    @DBRef
+    private Set<Role> roles = new HashSet<>();
 
-	private String password;
+    @DBRef
+    private List<Display> displays = new ArrayList<Display>();
 
-	private Set<String> roles = new HashSet<>();
+    @DBRef
+    private List<Board> boards = new ArrayList<Board>();
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-	private List<Display> displays;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
+    }
 
-	@OneToOne(cascade = CascadeType.ALL, mappedBy = "user")
-	private Location location;
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
-	@OneToOne(mappedBy = "user")
-	private UserProfile userProfile;
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-	private List<Board> boards;
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
-	// Getters and setters for all fields...
-
-	public List<Board> getBoards() {
-		return boards;
-	}
-
-	public void setBoards(List<Board> boards) {
-		this.boards = boards;
-	}
-
-	// Getters and setters for all fields
-
-	public UserProfile getUserProfile() {
-		return userProfile;
-	}
-
-	public void setUserProfile(UserProfile userProfile) {
-		this.userProfile = userProfile;
-	}
-
-	public Location getLocation() {
-		return location;
-	}
-
-	public void setLocation(Location location) {
-		this.location = location;
-	}
-
-	public List<Display> getDisplays() {
-		return displays;
-	}
-
-	public void setDisplays(List<Display> displays) {
-		this.displays = displays;
-	}
-
-	public User() {
-	}
-
-	public User(String username, String password) {
-		this.username = username;
-		this.password = password;
-	}
-
-	public User(String username, String password, Set<String> roles) {
-		this.username = username;
-		this.password = password;
-		this.roles = roles;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public Set<String> getRoles() {
-		return roles;
-	}
-
-	public void setRoles(Set<String> roles) {
-		this.roles = roles;
-	}
-
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return null;
-	}
-
-	@Override
-	public boolean isAccountNonExpired() {
-		return false;
-	}
-
-	@Override
-	public boolean isAccountNonLocked() {
-		return false;
-	}
-
-	@Override
-	public boolean isCredentialsNonExpired() {
-		return false;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return false;
-	}
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

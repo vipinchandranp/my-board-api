@@ -7,14 +7,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Document(collection = "display")
-public class Display extends Base {
+@Document(collection = "comment_reply")
+public class CommentReply extends Base {
+
+    private String reply;
 
     @DBRef
-    private Content content;
-
-    private Availability availability;
-
-    private Location location;
+    private User repliedBy;
 
 }

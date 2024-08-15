@@ -45,7 +45,7 @@ public class SecurityConfig {
 							response.setStatus(HttpServletResponse.SC_OK);
 							response.getWriter().flush();
 						}))
-				.authorizeHttpRequests(authz -> authz.requestMatchers("/v1/users/login", "/v1/users/signup").permitAll()
+				.authorizeHttpRequests(authz -> authz.requestMatchers("/v1/myboard/user/login", "/v1/myboard/user/signup").permitAll()
 						.anyRequest().authenticated());
 		return http.build();
 	}
