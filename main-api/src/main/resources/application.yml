@@ -1,3 +1,11 @@
+server:
+  servlet:
+    context-path: /myboard
+  error:
+    path: /error
+    whitelabel:
+      enabled: false  # Disable the default error page
+    include-message: always
 spring:
   data:
     mongodb:

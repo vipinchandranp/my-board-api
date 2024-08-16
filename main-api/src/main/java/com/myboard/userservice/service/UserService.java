@@ -3,52 +3,90 @@ package com.myboard.userservice.service;
 import com.myboard.userservice.controller.apimodel.*;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MyBoardException;
+import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.JwtUtil;
 import com.myboard.userservice.security.MyBoardAuthManager;
 import com.myboard.userservice.types.APIType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.context.MessageSource;
+
+import java.util.Locale;
 
 @Service
 public class UserService extends BaseService {
 
     @Autowired
-    private BaseResponse baseResponse;
+    private MyBoardWorkFlow flow;
 
     @Autowired
     private MyBoardAuthManager myBoardAuthManager;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
-    public BaseResponse process(BaseRequest baseRequest, APIType apiType) throws MyBoardException {
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private MessageSource messageSource;
+
+    public void process(MyBoardRequest baseRequest, APIType apiType) throws MyBoardException {
         try {
             switch (apiType) {
                 case USER_SIGNUP:
-                    break;
+                    handleUserSignup((UserSignupRequest) baseRequest);
                 case USER_LOGIN:
-                    UserLoginRequest loginRequest = (UserLoginRequest) baseRequest;
-                    Authentication authentication = myBoardAuthManager.authenticate(
-                            new UsernamePasswordAuthenticationToken(
-                                    loginRequest.getUsername(),
-                                    loginRequest.getPassword()
-                            )
-                    );
-                    String jwtToken = jwtUtil.generateToken(authentication.getName());
-                    UserLoginResponse loginResponse = new UserLoginResponse();
-                    loginResponse.setJwtToken(jwtToken);
-                    baseResponse.setData(loginResponse);
-                    break;
+                    handleUserLogin((UserLoginRequest) baseRequest);
                 default:
-                    break;
+                    throw new MyBoardException("Invalid API type");
             }
-            return baseResponse;
         } catch (Exception e) {
             throw new MyBoardException(e);
         }
     }
 
+    private void handleUserSignup(UserSignupRequest signupRequest) throws MyBoardException {
+        // Check if the user already exists
+        if (userRepository.existsByUsername(signupRequest.getUsername())) {
+            flow.addError(messageSource.getMessage("user.register.usernameExists", null, Locale.getDefault()));
+            throw new MyBoardException();
+        }
+
+        // Create and save the new user
+        User newUser = new User();
+        newUser.setUsername(signupRequest.getUsername());
+        newUser.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+        newUser.setEmail(signupRequest.getEmail());
+        newUser.setFirstName(signupRequest.getFirstName());
+        newUser.setLastName(signupRequest.getLastName());
+        newUser.setPhone(signupRequest.getPhone());
+
+        userRepository.save(newUser);
+
+        // Prepare the response
+        String signUpSuccessMessage = messageSource.getMessage("user.register.success", null, Locale.getDefault());
+        flow.addInfo(signUpSuccessMessage);
+        flow.setData(null);
+    }
+
+    private void handleUserLogin(UserLoginRequest loginRequest) throws MyBoardException {
+        Authentication authentication = myBoardAuthManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsername(),
+                        loginRequest.getPassword()
+                )
+        );
+        String jwtToken = jwtUtil.generateToken(authentication.getName());
+
+        UserLoginResponse loginResponse = new UserLoginResponse();
+        loginResponse.setJwtToken(jwtToken);
+        flow.setData(loginResponse);
+    }
 }

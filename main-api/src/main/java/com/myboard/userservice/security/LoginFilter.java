@@ -29,7 +29,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
 	@Autowired
 	public LoginFilter(AuthenticationManager authenticationManager) {
-		super("/v1/users/login"); // Set the URL pattern for this filter
+		super("/myboard/user/login"); // Set the URL pattern for this filter
 
 		setAuthenticationManager(authenticationManager);
 	}

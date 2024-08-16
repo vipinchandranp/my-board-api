@@ -20,8 +20,12 @@ public class User implements UserDetails {
     private Location selectedLocation;
     private String username;
     private String password;
-
-    private UserProfile userProfile;
+    private String email;
+    private String firstName;
+    private String lastName;
+    private Integer phone;
+    private String address;
+    private String profilePicName;
 
     @DBRef
     private Set<Role> roles = new HashSet<>();

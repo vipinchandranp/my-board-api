@@ -1,8 +1,11 @@
 package com.myboard.userservice.controller.apimodel;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.myboard.userservice.types.MessageType;
 import lombok.Data;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,12 +14,14 @@ import java.util.Map;
 
 
 @Data
-public class BaseResponse<T> {
+@Component
+@RequestScope
+public class MyBoardWorkFlow<T> {
 
     private T data;
     private Map<MessageType, List<String>> messages = new HashMap<>();
 
-    public BaseResponse() {
+    public MyBoardWorkFlow() {
         // Initialize the message lists
         messages.put(MessageType.INFO, new ArrayList<>());
         messages.put(MessageType.WARNING, new ArrayList<>());

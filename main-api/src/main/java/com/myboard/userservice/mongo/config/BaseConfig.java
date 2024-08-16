@@ -2,15 +2,13 @@ package com.myboard.userservice.mongo.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.myboard.userservice.controller.apimodel.BaseResponse;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
-import org.springframework.web.context.WebApplicationContext;
 
 @Configuration
 public class BaseConfig {
@@ -21,11 +19,6 @@ public class BaseConfig {
 		return new GridFsTemplate(mongoDatabaseFactory, mappingMongoConverter);
 	}
 
-	@Bean
-	@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
-	public <T> BaseResponse<T> baseResponse() {
-		return new BaseResponse<>();
-	}
 
 	@Bean
 	public ObjectMapper objectMapper() {
@@ -34,4 +27,12 @@ public class BaseConfig {
 		return mapper;
 	}
 
+
+	@Bean
+	public MessageSource messageSource() {
+		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+		messageSource.setBasename("messages");
+		messageSource.setDefaultEncoding("UTF-8");
+		return messageSource;
+	}
 }
