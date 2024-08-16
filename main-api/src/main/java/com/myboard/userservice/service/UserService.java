@@ -42,13 +42,15 @@ public class UserService extends BaseService {
             switch (apiType) {
                 case USER_SIGNUP:
                     handleUserSignup((UserSignupRequest) baseRequest);
+                    break;
                 case USER_LOGIN:
                     handleUserLogin((UserLoginRequest) baseRequest);
+                    break;
                 default:
                     throw new MyBoardException("Invalid API type");
             }
         } catch (Exception e) {
-            throw new MyBoardException(e);
+            throw new MyBoardException(e, e.getMessage());
         }
     }
 

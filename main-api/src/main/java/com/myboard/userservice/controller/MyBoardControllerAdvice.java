@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Locale;
 
 @RestControllerAdvice
@@ -28,6 +30,11 @@ public class MyBoardControllerAdvice {
     @ExceptionHandler(MyBoardException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public MyBoardResponse handleMyBoardException(MyBoardException ex) {
+        StringWriter sw = new StringWriter();
+        ex.printStackTrace(new PrintWriter(sw));
+        String stackTrace = sw.toString();
+        System.out.println(stackTrace);
+        myBoardWorkFlow.addError(stackTrace);
         return new MyBoardResponse(myBoardWorkFlow);
     }
 

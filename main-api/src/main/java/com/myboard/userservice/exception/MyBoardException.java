@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 @Data
 public class MyBoardException extends RuntimeException {
 
+    private String message;
     public MyBoardException(Exception ex) {
         super(ex);
     }
@@ -15,6 +16,7 @@ public class MyBoardException extends RuntimeException {
 
     public MyBoardException(String message) {
         super(message);
+        this.message = message;
     }
 
     public MyBoardException(Exception ex, String message) {
