@@ -1,7 +1,5 @@
 package com.myboard.userservice.security;
 
-import java.util.Collections;
-
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-public class MyBoardAuthManager implements AuthenticationManager {
+public class MBAuthManager implements AuthenticationManager {
 
 	@Autowired
 	private UserRepository userRepository;

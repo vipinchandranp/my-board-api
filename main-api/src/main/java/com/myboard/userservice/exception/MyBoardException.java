@@ -1,6 +1,5 @@
 package com.myboard.userservice.exception;
 
-import com.myboard.userservice.controller.apimodel.MyBoardWorkFlow;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

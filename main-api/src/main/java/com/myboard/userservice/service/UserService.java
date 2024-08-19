@@ -5,11 +5,12 @@ import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MyBoardException;
 import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.JwtUtil;
-import com.myboard.userservice.security.MyBoardAuthManager;
+import com.myboard.userservice.security.MBAuthManager;
 import com.myboard.userservice.types.APIType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.context.MessageSource;
@@ -17,13 +18,13 @@ import org.springframework.context.MessageSource;
 import java.util.Locale;
 
 @Service
-public class UserService extends BaseService {
+public class UserService {
 
     @Autowired
-    private MyBoardWorkFlow flow;
+    private WorkFlow flow;
 
     @Autowired
-    private MyBoardAuthManager myBoardAuthManager;
+    private MBAuthManager myBoardAuthManager;
 
     @Autowired
     private UserRepository userRepository;
@@ -37,7 +38,7 @@ public class UserService extends BaseService {
     @Autowired
     private MessageSource messageSource;
 
-    public void process(MyBoardRequest baseRequest, APIType apiType) throws MyBoardException {
+    public void process(MainRequest baseRequest, APIType apiType) throws MyBoardException {
         try {
             switch (apiType) {
                 case USER_SIGNUP:
@@ -90,5 +91,10 @@ public class UserService extends BaseService {
         UserLoginResponse loginResponse = new UserLoginResponse();
         loginResponse.setJwtToken(jwtToken);
         flow.setData(loginResponse);
+    }
+
+    public User getLoggedInUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (User) authentication.getPrincipal();
     }
 }

@@ -10,25 +10,25 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @CrossOrigin
 @RequestMapping("/user")
-public class UserController extends BaseController {
+public class UserController {
 
     @Autowired
     private UserService userService;
 
     @Autowired
-    private MyBoardWorkFlow flow;
+    private WorkFlow flow;
 
     //USER
     @PostMapping("/signup")
-    public MyBoardResponse<UserSignupResponse> signup(@RequestBody UserSignupRequest signupRequest) throws MyBoardException {
+    public MainResponse<UserSignupResponse> signup(@RequestBody UserSignupRequest signupRequest) throws MyBoardException {
         userService.process(signupRequest, APIType.USER_SIGNUP);
-        return new MyBoardResponse<>(flow);
+        return new MainResponse<>(flow);
     }
 
     @PostMapping("/login")
-    public MyBoardResponse<UserLoginResponse> login(@RequestBody UserLoginRequest loginRequest) throws MyBoardException {
+    public MainResponse<UserLoginResponse> login(@RequestBody UserLoginRequest loginRequest) throws MyBoardException {
         userService.process(loginRequest, APIType.USER_LOGIN);
-        return new MyBoardResponse<>(flow);
+        return new MainResponse<>(flow);
     }
 
 }

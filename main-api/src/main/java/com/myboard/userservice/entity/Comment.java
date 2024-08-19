@@ -15,6 +15,6 @@ public class Comment extends Base{
 
     private String comment;
 
-    private List<CommentReply> replies = new ArrayList<>();
+    private List<Reply> replies = new ArrayList<>();
 
 }

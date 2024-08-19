@@ -2,7 +2,7 @@ package com.myboard.userservice.security;
 
 import java.io.IOException;
 
-import com.myboard.userservice.service.MyBoardUserDetailsService;
+import com.myboard.userservice.service.MBUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
-    private MyBoardUserDetailsService userDetailsService;
+    private MBUserDetailsService userDetailsService;
 
     @Autowired
     private JwtUtil jwtUtil;

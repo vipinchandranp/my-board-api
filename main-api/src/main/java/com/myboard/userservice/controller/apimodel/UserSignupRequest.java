@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class UserSignupRequest extends MyBoardRequest{
+public class UserSignupRequest extends MainRequest {
 
     private String username;
 
