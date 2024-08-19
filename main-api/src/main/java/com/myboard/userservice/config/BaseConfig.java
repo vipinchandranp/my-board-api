@@ -1,4 +1,4 @@
-package com.myboard.userservice.mongo.config;
+package com.myboard.userservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

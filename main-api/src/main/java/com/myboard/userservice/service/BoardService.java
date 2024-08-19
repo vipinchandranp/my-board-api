@@ -1,10 +1,10 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.controller.apimodel.*;
+import com.myboard.userservice.controller.model.*;
 import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.entity.Media;
 import com.myboard.userservice.entity.User;
-import com.myboard.userservice.exception.MyBoardException;
+import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.BoardRepository;
 import com.myboard.userservice.types.APIType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ public class BoardService {
     @Value("${myboard.board.path}")
     private String boardPath;
 
-    public void process(MainRequest baseRequest, APIType apiType) throws MyBoardException {
+    public void process(MainRequest baseRequest, APIType apiType) throws MBException {
         try {
             switch (apiType) {
                 case BOARD_GET:
@@ -52,18 +52,18 @@ public class BoardService {
                     handleBoardDelete((BoardDeleteRequest) baseRequest);
                     break;
                 default:
-                    throw new MyBoardException("Invalid API type");
+                    throw new MBException("Invalid API type");
             }
         } catch (Exception e) {
-            throw new MyBoardException(e, e.getMessage());
+            throw new MBException(e, e.getMessage());
         }
     }
 
-    private void handleBoardSave(BoardSaveRequest boardSaveRequest) throws MyBoardException, IOException {
+    private void handleBoardSave(BoardSaveRequest boardSaveRequest) throws MBException, IOException {
         // Check if the board already exists
         if (boardRepository.existsByName(boardSaveRequest.getName())) {
             flow.addError(messageSource.getMessage("board.save.failure", null, Locale.getDefault()));
-            throw new MyBoardException();
+            throw new MBException();
         }
         User loggedInUser = userService.getLoggedInUser();
         MultipartFile mediaContent = boardSaveRequest.getMediaContent();
@@ -85,11 +85,11 @@ public class BoardService {
         flow.addInfo(boardSaveMessage);
     }
 
-    private void handleBoardUpdate(BoardUpdateRequest boardUpdateRequest) throws MyBoardException, IOException {
+    private void handleBoardUpdate(BoardUpdateRequest boardUpdateRequest) throws MBException, IOException {
         Board board = boardRepository.findById(boardUpdateRequest.getId()).orElse(null);
         if (board == null) {
             String message = messageSource.getMessage("board.update.failure", null, Locale.getDefault());
-            throw new MyBoardException(message);
+            throw new MBException(message);
         }
         User loggedInUser = userService.getLoggedInUser();
         MultipartFile mediaContent = boardUpdateRequest.getMediaContent();
@@ -111,22 +111,22 @@ public class BoardService {
         flow.addInfo(boardSaveMessage);
     }
 
-    private void handleBoardDelete(BoardDeleteRequest boardDeleteRequest) throws MyBoardException, IOException {
+    private void handleBoardDelete(BoardDeleteRequest boardDeleteRequest) throws MBException, IOException {
         try {
             boardRepository.deleteById(boardDeleteRequest.getId());
         } catch (Exception e) {
             String message = messageSource.getMessage("board.delete.failure", null, Locale.getDefault());
-            throw new MyBoardException(message);
+            throw new MBException(message);
         }
         String boardSaveMessage = messageSource.getMessage("board.delete.success", null, Locale.getDefault());
         flow.addInfo(boardSaveMessage);
     }
 
-    private void handleBoardGet(BoardGetRequest boardGetRequest) throws MyBoardException, IOException {
+    private void handleBoardGet(BoardGetRequest boardGetRequest) throws MBException, IOException {
         Board board = boardRepository.findById(boardGetRequest.getId()).orElse(null);
         if (board == null) {
             String message = messageSource.getMessage("board.get.failure", null, Locale.getDefault());
-            throw new MyBoardException(message);
+            throw new MBException(message);
         }
         flow.setData(board);
     }

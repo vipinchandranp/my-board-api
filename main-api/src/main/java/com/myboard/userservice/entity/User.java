@@ -1,5 +1,6 @@
 package com.myboard.userservice.entity;
 
+import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,12 +13,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Data
+@Builder
 @Document(collection = "user")
 public class User implements UserDetails {
 
     @Id
     private String id;
-    private Location selectedLocation;
+    private double[] location;
     private String username;
     private String password;
     private String email;

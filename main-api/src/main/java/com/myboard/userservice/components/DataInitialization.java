@@ -5,10 +5,12 @@ import com.myboard.userservice.entity.User;
 import com.myboard.userservice.repository.RoleRepository;
 import com.myboard.userservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -20,13 +22,16 @@ public class DataInitialization {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @PostConstruct
     public void init() {
-        Role adminRole = new Role("ROLE_ADMIN");
-        Role userRole = new Role("ROLE_USER");
-        roleRepository.save(adminRole);
-        roleRepository.save(userRole);
+        // Initialize roles if they don't exist
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> roleRepository.save(new Role("ROLE_ADMIN")));
+        Role userRole = roleRepository.findByName("ROLE_USER").orElseGet(() -> roleRepository.save(new Role("ROLE_USER")));
 
+        // Create sets of roles
         Set<Role> adminRoles = new HashSet<>();
         adminRoles.add(adminRole);
         adminRoles.add(userRole);
@@ -34,16 +39,22 @@ public class DataInitialization {
         Set<Role> userRoles = new HashSet<>();
         userRoles.add(userRole);
 
-        User admin = new User();
-        admin.setUsername("admin");
-        admin.setUsername("admin");
-        admin.setRoles(adminRoles);
-        User user = new User();
-        user.setUsername("admin");
-        user.setUsername("admin");
-        user.setRoles(userRoles);
+        // Initialize admin user if it doesn't exist
+        if (!userRepository.existsByUsername("admin")) {
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("adminPassword")); // Set a strong password
+            admin.setRoles(adminRoles);
+            userRepository.save(admin);
+        }
 
-        userRepository.save(admin);
-        userRepository.save(user);
+        // Initialize normal user if it doesn't exist
+        if (!userRepository.existsByUsername("user")) {
+            User user = new User();
+            user.setUsername("user");
+            user.setPassword(passwordEncoder.encode("userPassword")); // Set a strong password
+            user.setRoles(userRoles);
+            userRepository.save(user);
+        }
     }
 }

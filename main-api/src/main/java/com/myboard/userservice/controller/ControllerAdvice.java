@@ -1,8 +1,8 @@
 package com.myboard.userservice.controller;
 
-import com.myboard.userservice.controller.apimodel.MainResponse;
-import com.myboard.userservice.controller.apimodel.WorkFlow;
-import com.myboard.userservice.exception.MyBoardException;
+import com.myboard.userservice.controller.model.MainResponse;
+import com.myboard.userservice.controller.model.WorkFlow;
+import com.myboard.userservice.exception.MBException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -24,9 +24,9 @@ public class ControllerAdvice {
     @Autowired
     private WorkFlow myBoardWorkFlow;
 
-    @ExceptionHandler(MyBoardException.class)
+    @ExceptionHandler(MBException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public MainResponse handleMyBoardException(MyBoardException ex) {
+    public MainResponse handleMyBoardException(MBException ex) {
         StringWriter sw = new StringWriter();
         ex.printStackTrace(new PrintWriter(sw));
         String stackTrace = sw.toString();

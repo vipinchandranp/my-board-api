@@ -21,22 +21,6 @@ public class Base {
 
     private boolean active = true;
 
-    private List<Rating> ratings = new ArrayList<>();
-
-    private List<Comment> comments = new ArrayList<>();
-
-    boolean validated = false;
-
-    private Media media;
-
-    public void Base(){
-
-    }
-
-    public Base(Media media){
-        this.media = media;
-    }
-
     @CreatedDate
     private LocalDateTime createdAt;
 

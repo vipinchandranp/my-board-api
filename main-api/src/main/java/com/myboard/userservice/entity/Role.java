@@ -1,11 +1,13 @@
 package com.myboard.userservice.entity;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Data;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
+@Builder
 @Document(collection = "role")
 public class Role extends Base {
 

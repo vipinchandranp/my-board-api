@@ -1,6 +1,7 @@
 package com.myboard.userservice.entity;
 
 import com.myboard.userservice.types.StarRateType;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -8,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
+@Builder
 @Document(collection = "rating")
 public class Rating extends Base{
 

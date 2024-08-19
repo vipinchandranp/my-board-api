@@ -1,8 +1,8 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.controller.apimodel.*;
+import com.myboard.userservice.controller.model.*;
 import com.myboard.userservice.entity.User;
-import com.myboard.userservice.exception.MyBoardException;
+import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.JwtUtil;
 import com.myboard.userservice.security.MBAuthManager;
@@ -38,7 +38,7 @@ public class UserService {
     @Autowired
     private MessageSource messageSource;
 
-    public void process(MainRequest baseRequest, APIType apiType) throws MyBoardException {
+    public void process(MainRequest baseRequest, APIType apiType) throws MBException {
         try {
             switch (apiType) {
                 case USER_SIGNUP:
@@ -48,18 +48,18 @@ public class UserService {
                     handleUserLogin((UserLoginRequest) baseRequest);
                     break;
                 default:
-                    throw new MyBoardException("Invalid API type");
+                    throw new MBException("Invalid API type");
             }
         } catch (Exception e) {
-            throw new MyBoardException(e, e.getMessage());
+            throw new MBException(e, e.getMessage());
         }
     }
 
-    private void handleUserSignup(UserSignupRequest signupRequest) throws MyBoardException {
+    private void handleUserSignup(UserSignupRequest signupRequest) throws MBException {
         // Check if the user already exists
         if (userRepository.existsByUsername(signupRequest.getUsername())) {
             flow.addError(messageSource.getMessage("user.register.usernameExists", null, Locale.getDefault()));
-            throw new MyBoardException();
+            throw new MBException();
         }
 
         // Create and save the new user
@@ -79,7 +79,7 @@ public class UserService {
         flow.setData(null);
     }
 
-    private void handleUserLogin(UserLoginRequest loginRequest) throws MyBoardException {
+    private void handleUserLogin(UserLoginRequest loginRequest) throws MBException {
         Authentication authentication = myBoardAuthManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),

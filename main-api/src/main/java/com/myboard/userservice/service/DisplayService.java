@@ -1,12 +1,10 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.controller.apimodel.*;
-import com.myboard.userservice.entity.Board;
+import com.myboard.userservice.controller.model.*;
 import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.entity.Media;
 import com.myboard.userservice.entity.User;
-import com.myboard.userservice.exception.MyBoardException;
-import com.myboard.userservice.repository.BoardRepository;
+import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.types.APIType;
 import com.myboard.userservice.types.MediaType;
@@ -37,7 +35,7 @@ public class DisplayService {
     @Value("${myboard.board.path}")
     private String boardPath;
 
-    public void process(MainRequest baseRequest, APIType apiType) throws MyBoardException {
+    public void process(MainRequest baseRequest, APIType apiType) throws MBException {
         try {
             switch (apiType) {
                 case DISPLAY_GET:
@@ -53,18 +51,18 @@ public class DisplayService {
                     handleDisplayDelete((DisplayDeleteRequest) baseRequest);
                     break;
                 default:
-                    throw new MyBoardException("Invalid API type");
+                    throw new MBException("Invalid API type");
             }
         } catch (Exception e) {
-            throw new MyBoardException(e, e.getMessage());
+            throw new MBException(e, e.getMessage());
         }
     }
 
-    private void handleDisplaySave(DisplaySaveRequest displaySaveRequest) throws MyBoardException, IOException {
+    private void handleDisplaySave(DisplaySaveRequest displaySaveRequest) throws MBException, IOException {
         // Check if the board already exists
         if (displayRepository.existsByName(displaySaveRequest.getName())) {
             flow.addError(messageSource.getMessage("display.save.failure", null, Locale.getDefault()));
-            throw new MyBoardException();
+            throw new MBException();
         }
         User loggedInUser = userService.getLoggedInUser();
         MultipartFile mediaContent = displaySaveRequest.getMediaContent();
@@ -88,11 +86,11 @@ public class DisplayService {
         flow.addInfo(saveMessage);
     }
 
-    private void handleDisplayUpdate(DisplayUpdateRequest boardUpdateRequest) throws MyBoardException, IOException {
+    private void handleDisplayUpdate(DisplayUpdateRequest boardUpdateRequest) throws MBException, IOException {
         Display display = displayRepository.findById(boardUpdateRequest.getId()).orElse(null);
         if (display == null) {
             String message = messageSource.getMessage("display.update.failure", null, Locale.getDefault());
-            throw new MyBoardException(message);
+            throw new MBException(message);
         }
         User loggedInUser = userService.getLoggedInUser();
         MultipartFile mediaContent = boardUpdateRequest.getMediaContent();
@@ -114,22 +112,22 @@ public class DisplayService {
         flow.addInfo(boardSaveMessage);
     }
 
-    private void handleDisplayDelete(DisplayDeleteRequest displayDeleteRequest) throws MyBoardException, IOException {
+    private void handleDisplayDelete(DisplayDeleteRequest displayDeleteRequest) throws MBException, IOException {
         try {
             displayRepository.deleteById(displayDeleteRequest.getId());
         } catch (Exception e) {
             String message = messageSource.getMessage("display.delete.failure", null, Locale.getDefault());
-            throw new MyBoardException(message);
+            throw new MBException(message);
         }
         String displaySaveMessage = messageSource.getMessage("display.delete.success", null, Locale.getDefault());
         flow.addInfo(displaySaveMessage);
     }
 
-    private void handleDisplayGet(DisplayGetRequest displayGetRequest) throws MyBoardException, IOException {
+    private void handleDisplayGet(DisplayGetRequest displayGetRequest) throws MBException, IOException {
         Display display = displayRepository.findById(displayGetRequest.getId()).orElse(null);
         if (display == null) {
             String message = messageSource.getMessage("display.get.failure", null, Locale.getDefault());
-            throw new MyBoardException(message);
+            throw new MBException(message);
         }
         flow.setData(display);
     }
