@@ -20,22 +20,30 @@ public class DisplayController {
     private WorkFlow flow;
 
     @PostMapping("/save")
-    public MainResponse signup(@RequestBody DisplaySaveRequest displaySaveRequest) throws MyBoardException {
+    public MainResponse save(@RequestBody DisplaySaveRequest displaySaveRequest) throws MyBoardException {
         displayService.process(displaySaveRequest, APIType.DISPLAY_SAVE);
         return new MainResponse<>(flow);
     }
 
     @PostMapping("/update")
-    public MainResponse signup(@RequestBody DisplayUpdateRequest boardSaveRequest) throws MyBoardException {
+    public MainResponse update(@RequestBody DisplayUpdateRequest boardSaveRequest) throws MyBoardException {
         displayService.process(boardSaveRequest, APIType.DISPLAY_UPDATE);
         return new MainResponse<>(flow);
     }
 
     @GetMapping("/delete")
-    public MainResponse signup(@RequestParam Long id) throws MyBoardException {
+    public MainResponse delete(@RequestParam Long id) throws MyBoardException {
         DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
         displayDeleteRequest.setId(id);
         displayService.process(displayDeleteRequest, APIType.DISPLAY_DELETE);
+        return new MainResponse<>(flow);
+    }
+
+    @GetMapping("/get")
+    public MainResponse get(@RequestParam Long id) throws MyBoardException {
+        DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
+        displayDeleteRequest.setId(id);
+        displayService.process(displayDeleteRequest, APIType.DISPLAY_GET);
         return new MainResponse<>(flow);
     }
 }

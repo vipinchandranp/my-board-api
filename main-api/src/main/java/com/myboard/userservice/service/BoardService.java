@@ -39,6 +39,9 @@ public class BoardService {
     public void process(MainRequest baseRequest, APIType apiType) throws MyBoardException {
         try {
             switch (apiType) {
+                case BOARD_GET:
+                    handleBoardGet((BoardGetRequest) baseRequest);
+                    break;
                 case BOARD_SAVE:
                     handleBoardSave((BoardSaveRequest) baseRequest);
                     break;
@@ -84,8 +87,8 @@ public class BoardService {
 
     private void handleBoardUpdate(BoardUpdateRequest boardUpdateRequest) throws MyBoardException, IOException {
         Board board = boardRepository.findById(boardUpdateRequest.getId()).orElse(null);
-        if(board == null){
-            String message =  messageSource.getMessage("board.update.failure", null, Locale.getDefault());
+        if (board == null) {
+            String message = messageSource.getMessage("board.update.failure", null, Locale.getDefault());
             throw new MyBoardException(message);
         }
         User loggedInUser = userService.getLoggedInUser();
@@ -109,8 +112,22 @@ public class BoardService {
     }
 
     private void handleBoardDelete(BoardDeleteRequest boardDeleteRequest) throws MyBoardException, IOException {
-        boardRepository.deleteById(boardDeleteRequest.getId());
-        String boardSaveMessage =  messageSource.getMessage("board.delete.success", null, Locale.getDefault());
+        try {
+            boardRepository.deleteById(boardDeleteRequest.getId());
+        } catch (Exception e) {
+            String message = messageSource.getMessage("board.delete.failure", null, Locale.getDefault());
+            throw new MyBoardException(message);
+        }
+        String boardSaveMessage = messageSource.getMessage("board.delete.success", null, Locale.getDefault());
         flow.addInfo(boardSaveMessage);
+    }
+
+    private void handleBoardGet(BoardGetRequest boardGetRequest) throws MyBoardException, IOException {
+        Board board = boardRepository.findById(boardGetRequest.getId()).orElse(null);
+        if (board == null) {
+            String message = messageSource.getMessage("board.get.failure", null, Locale.getDefault());
+            throw new MyBoardException(message);
+        }
+        flow.setData(board);
     }
 }

@@ -21,22 +21,30 @@ public class BoardController {
     private WorkFlow flow;
 
     @PostMapping("/save")
-    public MainResponse signup(@RequestBody BoardSaveRequest boardSaveRequest) throws MyBoardException {
+    public MainResponse save(@RequestBody BoardSaveRequest boardSaveRequest) throws MyBoardException {
         boardService.process(boardSaveRequest, APIType.BOARD_SAVE);
         return new MainResponse<>(flow);
     }
 
     @PostMapping("/update")
-    public MainResponse signup(@RequestBody BoardUpdateRequest boardSaveRequest) throws MyBoardException {
+    public MainResponse update(@RequestBody BoardUpdateRequest boardSaveRequest) throws MyBoardException {
         boardService.process(boardSaveRequest, APIType.BOARD_UPDATE);
         return new MainResponse<>(flow);
     }
 
     @GetMapping("/delete")
-    public MainResponse signup(@RequestParam Long id) throws MyBoardException {
+    public MainResponse delete(@RequestParam Long id) throws MyBoardException {
         BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
         boardDeleteRequest.setId(id);
         boardService.process(boardDeleteRequest, APIType.BOARD_DELETE);
+        return new MainResponse<>(flow);
+    }
+
+    @GetMapping("/get")
+    public MainResponse get(@RequestParam Long id) throws MyBoardException {
+        BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
+        boardDeleteRequest.setId(id);
+        boardService.process(boardDeleteRequest, APIType.BOARD_GET);
         return new MainResponse<>(flow);
     }
 }

@@ -40,6 +40,9 @@ public class DisplayService {
     public void process(MainRequest baseRequest, APIType apiType) throws MyBoardException {
         try {
             switch (apiType) {
+                case DISPLAY_GET:
+                    handleDisplayGet((DisplaySaveRequest) baseRequest);
+                    break;
                 case DISPLAY_SAVE:
                     handleDisplaySave((DisplaySaveRequest) baseRequest);
                     break;
@@ -85,10 +88,10 @@ public class DisplayService {
         flow.addInfo(saveMessage);
     }
 
-    private void handleDisplayUpdate(BoardUpdateRequest boardUpdateRequest) throws MyBoardException, IOException {
+    private void handleDisplayUpdate(DisplayUpdateRequest boardUpdateRequest) throws MyBoardException, IOException {
         Display display = displayRepository.findById(boardUpdateRequest.getId()).orElse(null);
-        if(display == null){
-            String message =  messageSource.getMessage("display.update.failure", null, Locale.getDefault());
+        if (display == null) {
+            String message = messageSource.getMessage("display.update.failure", null, Locale.getDefault());
             throw new MyBoardException(message);
         }
         User loggedInUser = userService.getLoggedInUser();
@@ -111,9 +114,23 @@ public class DisplayService {
         flow.addInfo(boardSaveMessage);
     }
 
-    private void handleDisplayDelete(BoardDeleteRequest boardDeleteRequest) throws MyBoardException, IOException {
-        displayRepository.deleteById(boardDeleteRequest.getId());
-        String boardSaveMessage =  messageSource.getMessage("display.delete.success", null, Locale.getDefault());
-        flow.addInfo(boardSaveMessage);
+    private void handleDisplayDelete(DisplayDeleteRequest displayDeleteRequest) throws MyBoardException, IOException {
+        try {
+            displayRepository.deleteById(displayDeleteRequest.getId());
+        } catch (Exception e) {
+            String message = messageSource.getMessage("display.delete.failure", null, Locale.getDefault());
+            throw new MyBoardException(message);
+        }
+        String displaySaveMessage = messageSource.getMessage("display.delete.success", null, Locale.getDefault());
+        flow.addInfo(displaySaveMessage);
+    }
+
+    private void handleDisplayGet(DisplayGetRequest displayGetRequest) throws MyBoardException, IOException {
+        Display display = displayRepository.findById(displayGetRequest.getId()).orElse(null);
+        if (display == null) {
+            String message = messageSource.getMessage("display.get.failure", null, Locale.getDefault());
+            throw new MyBoardException(message);
+        }
+        flow.setData(display);
     }
 }
