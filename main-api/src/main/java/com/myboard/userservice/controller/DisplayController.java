@@ -53,7 +53,7 @@ public class DisplayController {
         DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
         displayDeleteRequest.setId(id);
         displayDeleteRequest.setDate(date);
-        displayService.process(displayDeleteRequest, APIType.DISPLAY_GET);
+        displayService.process(displayDeleteRequest, APIType.DISPLAY_GET_TIMESLOTS);
         return new MainResponse<>(flow);
     }
 
