@@ -50,10 +50,10 @@ public class DisplayController {
 
     @GetMapping("/get/time-slots")
     public MainResponse getTimeSlots(@RequestParam Long id, @RequestParam LocalDate date) throws MBException {
-        DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
-        displayDeleteRequest.setId(id);
-        displayDeleteRequest.setDate(date);
-        displayService.process(displayDeleteRequest, APIType.DISPLAY_GET_TIMESLOTS);
+        DisplayGetTimeSlotsRequest displayGetTimeSlotRequest = new DisplayGetTimeSlotsRequest();
+        displayGetTimeSlotRequest.setId(id);
+        displayGetTimeSlotRequest.setDate(date);
+        displayService.process(displayGetTimeSlotRequest, APIType.DISPLAY_GET_TIMESLOTS);
         return new MainResponse<>(flow);
     }
 
