@@ -9,11 +9,8 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -25,17 +22,20 @@ public class Display extends Base {
         this.media = media;
     }
 
+    @DBRef(lazy = true)
     private List<Rating> ratings = new ArrayList<>();
 
+    @DBRef(lazy = true)
     private List<Comment> comments = new ArrayList<>();
 
     private StatusType validationStatus = StatusType.WAITING_FOR_APPROVAL;
 
     private Media media;
 
-    private HashMap<LocalDate, ArrayList<Timeslot>> availabilityMap;
+    // Reference to the Availability collection
+    @DBRef(lazy = true)
+    private List<Availability> availabilityList;
 
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
-
     private double[] location;
 }

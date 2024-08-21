@@ -4,9 +4,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.List;
 
-@Data
 @EqualsAndHashCode(callSuper = true)
-public class DisplayDeleteRequest extends MainRequest {
+@Data
+public class DisplaySaveTimeSlotsRequest extends MainRequest {
     private LocalDate date;
+    private List<TimeslotRequest> timeslots;
 }

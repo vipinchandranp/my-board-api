@@ -7,6 +7,6 @@ import java.time.LocalDate;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class DisplayDeleteRequest extends MainRequest {
+public class DisplayGetTimeSlotsRequest extends MainRequest {
     private LocalDate date;
 }

@@ -30,16 +30,16 @@ public class BoardController {
         return new MainResponse<>(flow);
     }
 
-    @GetMapping("/delete")
-    public MainResponse delete(@RequestParam Long id) throws MBException {
+    @GetMapping("/delete/{id}")
+    public MainResponse delete(@PathVariable Long id) throws MBException {
         BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
         boardDeleteRequest.setId(id);
         boardService.process(boardDeleteRequest, APIType.BOARD_DELETE);
         return new MainResponse<>(flow);
     }
 
-    @GetMapping("/get")
-    public MainResponse get(@RequestParam Long id) throws MBException {
+    @GetMapping("/get/{id}")
+    public MainResponse get(@PathVariable Long id) throws MBException {
         BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
         boardDeleteRequest.setId(id);
         boardService.process(boardDeleteRequest, APIType.BOARD_GET);

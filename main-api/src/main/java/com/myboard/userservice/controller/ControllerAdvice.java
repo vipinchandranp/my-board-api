@@ -22,7 +22,7 @@ public class ControllerAdvice {
 
 
     @Autowired
-    private WorkFlow myBoardWorkFlow;
+    private WorkFlow flow;
 
     @ExceptionHandler(MBException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -31,15 +31,14 @@ public class ControllerAdvice {
         ex.printStackTrace(new PrintWriter(sw));
         String stackTrace = sw.toString();
         System.out.println(stackTrace);
-        myBoardWorkFlow.addError(stackTrace);
-        return new MainResponse(myBoardWorkFlow);
+        flow.addError(stackTrace);
+        return new MainResponse(flow);
     }
 
     @ExceptionHandler(Exception.class)
     public MainResponse handleGlobalException(Exception ex) {
         String internalError = messageSource.getMessage("Unexpected error occurred", null, Locale.getDefault());
-        WorkFlow baseResponse = new WorkFlow();
-        baseResponse.addError(internalError);
-        return new MainResponse(baseResponse);
+        flow.addError(internalError);
+        return new MainResponse(flow);
     }
 }
