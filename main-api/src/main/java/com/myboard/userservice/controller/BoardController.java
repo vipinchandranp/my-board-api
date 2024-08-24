@@ -1,6 +1,10 @@
 package com.myboard.userservice.controller;
 
-import com.myboard.userservice.controller.model.*;
+import com.myboard.userservice.controller.model.board.BoardDeleteRequest;
+import com.myboard.userservice.controller.model.board.BoardSaveRequest;
+import com.myboard.userservice.controller.model.board.BoardUpdateRequest;
+import com.myboard.userservice.controller.model.common.MainResponse;
+import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.BoardService;
 import com.myboard.userservice.types.APIType;
@@ -30,18 +34,18 @@ public class BoardController {
         return new MainResponse<>(flow);
     }
 
-    @GetMapping("/delete/{id}")
-    public MainResponse delete(@PathVariable String id) throws MBException {
+    @GetMapping("/delete/{boardId}")
+    public MainResponse delete(@PathVariable String boardId) throws MBException {
         BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
-        boardDeleteRequest.setId(id);
+        boardDeleteRequest.setBoardId(boardId);
         boardService.process(boardDeleteRequest, APIType.BOARD_DELETE);
         return new MainResponse<>(flow);
     }
 
-    @GetMapping("/get/{id}")
-    public MainResponse get(@PathVariable String id) throws MBException {
+    @GetMapping("/get/{boardId}")
+    public MainResponse get(@PathVariable String boardId) throws MBException {
         BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
-        boardDeleteRequest.setId(id);
+        boardDeleteRequest.setBoardId(boardId);
         boardService.process(boardDeleteRequest, APIType.BOARD_GET);
         return new MainResponse<>(flow);
     }

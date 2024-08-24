@@ -1,4 +1,4 @@
-package com.myboard.userservice.controller.model;
+package com.myboard.userservice.controller.model.common;
 
 import com.myboard.userservice.types.MessageType;
 import lombok.Data;

@@ -1,13 +1,16 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.controller.model.*;
+import com.myboard.userservice.controller.model.common.MainRequest;
+import com.myboard.userservice.controller.model.common.TimeslotRequest;
+import com.myboard.userservice.controller.model.common.WorkFlow;
+import com.myboard.userservice.controller.model.display.*;
 import com.myboard.userservice.entity.*;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.AvailabilityRepository;
+import com.myboard.userservice.repository.BoardRepository;
 import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.types.APIType;
 import com.myboard.userservice.types.MediaType;
-import com.myboard.userservice.controller.model.DisplayGetTimeSlotsRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -36,6 +39,9 @@ public class DisplayService {
     private DisplayRepository displayRepository;
 
     @Autowired
+    private BoardRepository boardRepository;
+
+    @Autowired
     private AvailabilityRepository availabilityRepository;
 
     @Autowired
@@ -62,8 +68,8 @@ public class DisplayService {
                 case DISPLAY_GET_TIMESLOTS:
                     handleDisplayGetTimeSlots((DisplayGetTimeSlotsRequest) baseRequest);
                     break;
-                case DISPLAY_SAVE_TIMESLOTS:
-                    handleDisplaySaveTimeSlots((DisplaySaveTimeSlotsRequest) baseRequest);
+                case DISPLAY_UPDATE_TIMESLOTS:
+                    handleDisplayUpdateTimeSlots((DisplayUpdateTimeSlotsRequest) baseRequest);
                     break;
                 default:
                     throw new MBException("Invalid API type");
@@ -113,7 +119,7 @@ public class DisplayService {
     }
 
     private void handleDisplayUpdate(DisplayUpdateRequest boardUpdateRequest) throws MBException, IOException {
-        Display display = displayRepository.findById(boardUpdateRequest.getId()).orElse(null);
+        Display display = displayRepository.findById(boardUpdateRequest.getDisplayId()).orElse(null);
         if (display == null) {
             String message = messageSource.getMessage("display.update.failure", null, Locale.getDefault());
             throw new MBException(message);
@@ -140,7 +146,7 @@ public class DisplayService {
 
     private void handleDisplayDelete(DisplayDeleteRequest displayDeleteRequest) throws MBException, IOException {
         try {
-            displayRepository.deleteById(displayDeleteRequest.getId());
+            displayRepository.deleteById(displayDeleteRequest.getDisplayId());
         } catch (Exception e) {
             String message = messageSource.getMessage("display.delete.failure", null, Locale.getDefault());
             throw new MBException(message);
@@ -150,7 +156,7 @@ public class DisplayService {
     }
 
     private void handleDisplayGet(DisplayGetRequest displayGetRequest) throws MBException, IOException {
-        Display display = displayRepository.findById(displayGetRequest.getId()).orElse(null);
+        Display display = displayRepository.findById(displayGetRequest.getDisplayId()).orElse(null);
         if (display == null) {
             String message = messageSource.getMessage("display.get.failure", null, Locale.getDefault());
             throw new MBException(message);
@@ -159,7 +165,7 @@ public class DisplayService {
     }
     private void handleDisplayGetTimeSlots(DisplayGetTimeSlotsRequest displayGetTimeSlotsRequest) throws MBException, IOException {
         // Find the display by its ID
-        Display display = displayRepository.findById(displayGetTimeSlotsRequest.getId()).orElse(null);
+        Display display = displayRepository.findById(displayGetTimeSlotsRequest.getDisplayId()).orElse(null);
         if (display == null) {
             String message = messageSource.getMessage("display.get.time-slots.failure", null, Locale.getDefault());
             throw new MBException(message);
@@ -184,20 +190,26 @@ public class DisplayService {
     }
 
 
-    private void handleDisplaySaveTimeSlots(DisplaySaveTimeSlotsRequest displaySaveTimeSlotsRequest) throws MBException, IOException {
+    private void handleDisplayUpdateTimeSlots(DisplayUpdateTimeSlotsRequest displayUpdateTimeSlotsRequest) throws MBException, IOException {
         // Find the display by its ID
-        Display display = displayRepository.findById(displaySaveTimeSlotsRequest.getId()).orElse(null);
+        Display display = displayRepository.findById(displayUpdateTimeSlotsRequest.getDisplayId()).orElse(null);
         if (display == null) {
-            String message = messageSource.getMessage("display.save.time-slots.failure", null, Locale.getDefault());
+            String message = messageSource.getMessage("Display not found", null, Locale.getDefault());
+            throw new MBException(message);
+        }
+
+        Board board = boardRepository.findById(displayUpdateTimeSlotsRequest.getDisplayId()).orElse(null);
+        if (board == null) {
+            String message = messageSource.getMessage("Board not found", null, Locale.getDefault());
             throw new MBException(message);
         }
 
         // Check if availability for the given date already exists
-        Availability existingAvailability = availabilityRepository.findByDisplayIdAndDate(display.getId(), displaySaveTimeSlotsRequest.getDate());
+        Availability existingAvailability = availabilityRepository.findByDisplayIdAndDate(display.getId(), displayUpdateTimeSlotsRequest.getDate());
 
         if (existingAvailability != null) {
             // If availability exists, update the existing time slots
-            existingAvailability.setTimeSlots(displaySaveTimeSlotsRequest.getTimeslots()
+            existingAvailability.setTimeSlots(displayUpdateTimeSlotsRequest.getTimeslots()
                     .stream()
                     .map(this::convertToEntity)
                     .collect(Collectors.toList()));
@@ -206,8 +218,9 @@ public class DisplayService {
             // If availability does not exist, create a new entry
             Availability newAvailability = new Availability();
             newAvailability.setDisplay(display);
-            newAvailability.setDate(displaySaveTimeSlotsRequest.getDate());
-            newAvailability.setTimeSlots(displaySaveTimeSlotsRequest.getTimeslots()
+            newAvailability.setBoard(board);
+            newAvailability.setDate(displayUpdateTimeSlotsRequest.getDate());
+            newAvailability.setTimeSlots(displayUpdateTimeSlotsRequest.getTimeslots()
                     .stream()
                     .map(this::convertToEntity)
                     .collect(Collectors.toList()));
@@ -215,7 +228,7 @@ public class DisplayService {
         }
 
         // Prepare the success message
-        String saveMessage = messageSource.getMessage("display.save.time-slots.success", null, Locale.getDefault());
+        String saveMessage = messageSource.getMessage("display.update.time-slots.success", null, Locale.getDefault());
         flow.addInfo(saveMessage);
     }
 

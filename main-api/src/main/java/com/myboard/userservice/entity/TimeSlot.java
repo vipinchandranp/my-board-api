@@ -12,7 +12,5 @@ import lombok.NoArgsConstructor;
 public class TimeSlot {
     private String startTime;
     private String endTime;
-    private String status;     // e.g., "09:00-10:00"
-    private boolean isAvailable;
-
+    private String status;
 }

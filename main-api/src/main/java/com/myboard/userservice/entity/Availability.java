@@ -11,14 +11,12 @@ import java.util.List;
 @Data
 @Document(collection = "availability")
 public class Availability {
-
     @Id
-    private Long id;
-
+    private String id;
     @DBRef
-    private Display display;  // Reference to Display entity
-
+    private Display display;
+    @DBRef
+    private Board board;
     private LocalDate date;
-
     private List<TimeSlot> timeSlots;
 }

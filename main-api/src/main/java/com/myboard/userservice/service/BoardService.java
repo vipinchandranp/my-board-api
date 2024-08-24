@@ -1,6 +1,11 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.controller.model.*;
+import com.myboard.userservice.controller.model.board.BoardDeleteRequest;
+import com.myboard.userservice.controller.model.board.BoardGetRequest;
+import com.myboard.userservice.controller.model.board.BoardSaveRequest;
+import com.myboard.userservice.controller.model.board.BoardUpdateRequest;
+import com.myboard.userservice.controller.model.common.MainRequest;
+import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.entity.Media;
 import com.myboard.userservice.entity.User;
@@ -86,7 +91,7 @@ public class BoardService {
     }
 
     private void handleBoardUpdate(BoardUpdateRequest boardUpdateRequest) throws MBException, IOException {
-        Board board = boardRepository.findById(boardUpdateRequest.getId()).orElse(null);
+        Board board = boardRepository.findById(boardUpdateRequest.getBoardId()).orElse(null);
         if (board == null) {
             String message = messageSource.getMessage("board.update.failure", null, Locale.getDefault());
             throw new MBException(message);
@@ -113,7 +118,7 @@ public class BoardService {
 
     private void handleBoardDelete(BoardDeleteRequest boardDeleteRequest) throws MBException, IOException {
         try {
-            boardRepository.deleteById(boardDeleteRequest.getId());
+            boardRepository.deleteById(boardDeleteRequest.getBoardId());
         } catch (Exception e) {
             String message = messageSource.getMessage("board.delete.failure", null, Locale.getDefault());
             throw new MBException(message);
@@ -123,7 +128,7 @@ public class BoardService {
     }
 
     private void handleBoardGet(BoardGetRequest boardGetRequest) throws MBException, IOException {
-        Board board = boardRepository.findById(boardGetRequest.getId()).orElse(null);
+        Board board = boardRepository.findById(boardGetRequest.getBoardId()).orElse(null);
         if (board == null) {
             String message = messageSource.getMessage("board.get.failure", null, Locale.getDefault());
             throw new MBException(message);

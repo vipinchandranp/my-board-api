@@ -1,7 +1,7 @@
 package com.myboard.userservice.controller;
 
-import com.myboard.userservice.controller.model.MainResponse;
-import com.myboard.userservice.controller.model.WorkFlow;
+import com.myboard.userservice.controller.model.common.MainResponse;
+import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.exception.MBException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;

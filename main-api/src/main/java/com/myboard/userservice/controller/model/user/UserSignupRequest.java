@@ -1,5 +1,6 @@
-package com.myboard.userservice.controller.model;
+package com.myboard.userservice.controller.model.user;
 
+import com.myboard.userservice.controller.model.common.MainRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

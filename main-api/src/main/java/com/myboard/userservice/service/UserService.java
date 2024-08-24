@@ -1,6 +1,10 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.controller.model.*;
+import com.myboard.userservice.controller.model.common.MainRequest;
+import com.myboard.userservice.controller.model.common.WorkFlow;
+import com.myboard.userservice.controller.model.user.UserLoginRequest;
+import com.myboard.userservice.controller.model.user.UserLoginResponse;
+import com.myboard.userservice.controller.model.user.UserSignupRequest;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.UserRepository;

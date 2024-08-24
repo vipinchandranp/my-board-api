@@ -1,4 +1,4 @@
-package com.myboard.userservice.controller.model;
+package com.myboard.userservice.controller.model.user;
 
 import lombok.Data;
 

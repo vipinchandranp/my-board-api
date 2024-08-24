@@ -1,6 +1,8 @@
 package com.myboard.userservice.controller;
 
-import com.myboard.userservice.controller.model.*;
+import com.myboard.userservice.controller.model.common.MainResponse;
+import com.myboard.userservice.controller.model.common.WorkFlow;
+import com.myboard.userservice.controller.model.display.*;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.DisplayService;
 import com.myboard.userservice.types.APIType;
@@ -33,33 +35,33 @@ public class DisplayController {
     }
 
     @GetMapping("/delete/{id}")
-    public MainResponse delete(@PathVariable String id) throws MBException {
+    public MainResponse delete(@PathVariable String displayId) throws MBException {
         DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
-        displayDeleteRequest.setId(id);
+        displayDeleteRequest.setDisplayId(displayId);
         displayService.process(displayDeleteRequest, APIType.DISPLAY_DELETE);
         return new MainResponse<>(flow);
     }
 
-    @GetMapping("/get/{id}")
-    public MainResponse get(@PathVariable String id) throws MBException {
+    @GetMapping("/get/{displayId}")
+    public MainResponse get(@PathVariable String displayId) throws MBException {
         DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
-        displayDeleteRequest.setId(id);
+        displayDeleteRequest.setDisplayId(displayId);
         displayService.process(displayDeleteRequest, APIType.DISPLAY_GET);
         return new MainResponse<>(flow);
     }
 
     @GetMapping("/get/time-slots")
-    public MainResponse getTimeSlots(@RequestParam String id, @RequestParam LocalDate date) throws MBException {
+    public MainResponse getTimeSlots(@RequestParam String displayId, @RequestParam LocalDate date) throws MBException {
         DisplayGetTimeSlotsRequest displayGetTimeSlotRequest = new DisplayGetTimeSlotsRequest();
-        displayGetTimeSlotRequest.setId(id);
+        displayGetTimeSlotRequest.setDisplayId(displayId);
         displayGetTimeSlotRequest.setDate(date);
         displayService.process(displayGetTimeSlotRequest, APIType.DISPLAY_GET_TIMESLOTS);
         return new MainResponse<>(flow);
     }
 
-    @PostMapping("/save/time-slots")
-    public MainResponse saveTimeSlots(@RequestBody DisplaySaveTimeSlotsRequest displaySaveTimeSlots) throws MBException {
-        displayService.process(displaySaveTimeSlots, APIType.DISPLAY_SAVE_TIMESLOTS);
+    @PutMapping("/update/time-slots")
+    public MainResponse updateTimeSlots(@RequestBody DisplayUpdateTimeSlotsRequest displaySaveTimeSlots) throws MBException {
+        displayService.process(displaySaveTimeSlots, APIType.DISPLAY_UPDATE_TIMESLOTS);
         return new MainResponse<>(flow);
     }
 }

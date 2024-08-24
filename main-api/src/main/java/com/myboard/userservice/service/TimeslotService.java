@@ -35,7 +35,6 @@ public class TimeslotService {
                     .startTime(startTime.toString())
                     .endTime(slotEndTime.toString())
                     .status("available")
-                    .isAvailable(true)
                     .build();
 
             timeSlots.add(timeSlot);
