@@ -18,6 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DisplayGetTimeSlotsResponse extends MainRequest {
+    private String displayId;
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate date;
     private List<TimeSlot> timeSlots;

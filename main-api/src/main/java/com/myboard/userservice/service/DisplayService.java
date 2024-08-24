@@ -187,7 +187,7 @@ public class DisplayService {
         }
 
         // Wrap the time slots and date in a response object
-        DisplayGetTimeSlotsResponse response = new DisplayGetTimeSlotsResponse(displayGetTimeSlotsRequest.getDate(), timeSlots);
+        DisplayGetTimeSlotsResponse response = new DisplayGetTimeSlotsResponse(display.getId(), displayGetTimeSlotsRequest.getDate(), timeSlots);
         flow.setData(response);
     }
 
