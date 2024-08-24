@@ -28,6 +28,8 @@ dependencies {
     implementation 'net.glxn:qrgen:1.4'
     implementation 'com.google.cloud:google-cloud-vision:3.34.0'
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0'
+
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"

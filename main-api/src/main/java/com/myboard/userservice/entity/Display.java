@@ -1,9 +1,7 @@
 package com.myboard.userservice.entity;
 
 import com.myboard.userservice.types.StatusType;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -15,12 +13,16 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(collection = "display")
 public class Display extends Base {
 
     public Display(Media media) {
         this.media = media;
     }
+
+    private String name;
 
     @DBRef(lazy = true)
     private List<Rating> ratings = new ArrayList<>();

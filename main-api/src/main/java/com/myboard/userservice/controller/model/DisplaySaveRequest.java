@@ -8,5 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 @EqualsAndHashCode(callSuper = true)
 public class DisplaySaveRequest extends MainRequest {
     private String name;
+    private double latitude;
+    private double longitude;
     private MultipartFile mediaContent;
 }

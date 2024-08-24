@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.myboard.userservice.entity.Board;
 
 @Repository
-public interface BoardRepository extends MongoRepository<Board, Long> {
+public interface BoardRepository extends MongoRepository<Board, String> {
     boolean existsByName(String name);
 }

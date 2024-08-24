@@ -24,7 +24,7 @@ public class DataInitialization {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
+/*
     @PostConstruct
     public void init() {
         // Initialize roles if they don't exist
@@ -56,5 +56,5 @@ public class DataInitialization {
             user.setRoles(userRoles);
             userRepository.save(user);
         }
-    }
+    }*/
 }

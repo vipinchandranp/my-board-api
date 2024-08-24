@@ -31,7 +31,7 @@ public class BoardController {
     }
 
     @GetMapping("/delete/{id}")
-    public MainResponse delete(@PathVariable Long id) throws MBException {
+    public MainResponse delete(@PathVariable String id) throws MBException {
         BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
         boardDeleteRequest.setId(id);
         boardService.process(boardDeleteRequest, APIType.BOARD_DELETE);
@@ -39,7 +39,7 @@ public class BoardController {
     }
 
     @GetMapping("/get/{id}")
-    public MainResponse get(@PathVariable Long id) throws MBException {
+    public MainResponse get(@PathVariable String id) throws MBException {
         BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
         boardDeleteRequest.setId(id);
         boardService.process(boardDeleteRequest, APIType.BOARD_GET);

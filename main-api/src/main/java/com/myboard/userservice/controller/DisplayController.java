@@ -11,7 +11,7 @@ import java.time.LocalDate;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/board")
+@RequestMapping("/display")
 public class DisplayController {
 
     @Autowired
@@ -33,7 +33,7 @@ public class DisplayController {
     }
 
     @GetMapping("/delete/{id}")
-    public MainResponse delete(@PathVariable Long id) throws MBException {
+    public MainResponse delete(@PathVariable String id) throws MBException {
         DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
         displayDeleteRequest.setId(id);
         displayService.process(displayDeleteRequest, APIType.DISPLAY_DELETE);
@@ -41,7 +41,7 @@ public class DisplayController {
     }
 
     @GetMapping("/get/{id}")
-    public MainResponse get(@PathVariable Long id) throws MBException {
+    public MainResponse get(@PathVariable String id) throws MBException {
         DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
         displayDeleteRequest.setId(id);
         displayService.process(displayDeleteRequest, APIType.DISPLAY_GET);
@@ -49,7 +49,7 @@ public class DisplayController {
     }
 
     @GetMapping("/get/time-slots")
-    public MainResponse getTimeSlots(@RequestParam Long id, @RequestParam LocalDate date) throws MBException {
+    public MainResponse getTimeSlots(@RequestParam String id, @RequestParam LocalDate date) throws MBException {
         DisplayGetTimeSlotsRequest displayGetTimeSlotRequest = new DisplayGetTimeSlotsRequest();
         displayGetTimeSlotRequest.setId(id);
         displayGetTimeSlotRequest.setDate(date);

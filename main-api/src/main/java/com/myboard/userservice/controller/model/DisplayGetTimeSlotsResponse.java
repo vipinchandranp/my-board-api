@@ -13,6 +13,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class DisplayGetTimeSlotsRequest extends MainRequest {
+public class DisplayGetTimeSlotsResponse extends MainRequest {
     private LocalDate date;
+    private List<TimeSlot> timeSlots;
 }

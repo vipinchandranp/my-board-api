@@ -7,6 +7,7 @@ import com.myboard.userservice.repository.AvailabilityRepository;
 import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.types.APIType;
 import com.myboard.userservice.types.MediaType;
+import com.myboard.userservice.controller.model.DisplayGetTimeSlotsRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -16,13 +17,17 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class DisplayService {
 
     @Autowired
-    private UserService userService;
+    private TimeslotService timeslotService;
+
+    @Autowired
+    private MBUserDetailsService mbUserDetailsService;
 
     @Autowired
     private WorkFlow flow;
@@ -74,20 +79,31 @@ public class DisplayService {
             flow.addError(messageSource.getMessage("display.save.failure", null, Locale.getDefault()));
             throw new MBException();
         }
-        User loggedInUser = userService.getLoggedInUser();
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
         MultipartFile mediaContent = displaySaveRequest.getMediaContent();
         Media media = Media.builder()
                 .mediaType(MediaType.IMAGE)
                 .mediaLocation(boardPath + "/" + loggedInUser)
-                .mediaName(mediaContent.getName())
-                .mediaContent(mediaContent.getBytes())
+                .mediaName(Optional.ofNullable(mediaContent).map(MultipartFile::getName).orElse(null))
+                .mediaContent(Optional.ofNullable(mediaContent).map(m -> {
+                    try {
+                        return m.getBytes();
+                    } catch (IOException e) {
+                        // Handle exception and provide default content
+                        return new byte[0];
+                    }
+                }).orElse(new byte[0]))
                 .build();
-
-        Display display = new Display(media);
+        Display display = Display.builder()
+                .name(displaySaveRequest.getName())
+                .location(new double[]{displaySaveRequest.getLongitude(), displaySaveRequest.getLatitude()})
+                .media(media)
+                .build();
+        display.setName(displaySaveRequest.getName());
         displayRepository.save(display);
         // Prepare the response
         String saveMessage = null;
-        if (display.getId() > 0) {
+        if (display.getId() != null) {
             saveMessage = messageSource.getMessage("display.save.success", null, Locale.getDefault());
         } else {
             saveMessage = messageSource.getMessage("display.save.failure", null, Locale.getDefault());
@@ -102,7 +118,7 @@ public class DisplayService {
             String message = messageSource.getMessage("display.update.failure", null, Locale.getDefault());
             throw new MBException(message);
         }
-        User loggedInUser = userService.getLoggedInUser();
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
         MultipartFile mediaContent = boardUpdateRequest.getMediaContent();
         Media media = Media.builder()
                 .mediaType(MediaType.IMAGE)
@@ -114,7 +130,7 @@ public class DisplayService {
         displayRepository.save(display);
         // Prepare the response
         String boardSaveMessage = null;
-        if (display.getId() > 0) {
+        if (display.getId() != null) {
             boardSaveMessage = messageSource.getMessage("display.update.success", null, Locale.getDefault());
         } else {
             boardSaveMessage = messageSource.getMessage("display.update.failure", null, Locale.getDefault());
@@ -151,17 +167,23 @@ public class DisplayService {
 
         // Fetch the availability for the specific date from the AvailabilityRepository
         Availability availability = availabilityRepository.findByDisplayIdAndDate(display.getId(), displayGetTimeSlotsRequest.getDate());
+
+        List<TimeSlot> timeSlots;
+
         if (availability == null) {
-            String message = messageSource.getMessage("availability.get.time-slots.failure", null, Locale.getDefault());
-            throw new MBException(message);
+            // If availability is not found, create default time slots using TimeslotService
+            timeSlots = timeslotService.getDefaultTimeSlots();
+        } else {
+            // Filter and retrieve the time slots for the specific date
+            timeSlots = availability.getTimeSlots();
         }
 
-        // Filter and retrieve the time slots for the specific date
-        List<TimeSlot> filteredSlots = availability.getTimeSlots();
-
-        // You can either set the filtered time slots directly to the flow or wrap them in a response object
-        flow.setData(filteredSlots);
+        // Wrap the time slots and date in a response object
+        DisplayGetTimeSlotsResponse response = new DisplayGetTimeSlotsResponse(displayGetTimeSlotsRequest.getDate(), timeSlots);
+        flow.setData(response);
     }
+
+
     private void handleDisplaySaveTimeSlots(DisplaySaveTimeSlotsRequest displaySaveTimeSlotsRequest) throws MBException, IOException {
         // Find the display by its ID
         Display display = displayRepository.findById(displaySaveTimeSlotsRequest.getId()).orElse(null);

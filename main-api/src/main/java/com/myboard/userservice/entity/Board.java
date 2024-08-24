@@ -4,17 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.myboard.userservice.types.StatusType;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(collection = "board")
 public class Board extends Base {
+
+    private String name;
 
     private List<Rating> ratings = new ArrayList<>();
 

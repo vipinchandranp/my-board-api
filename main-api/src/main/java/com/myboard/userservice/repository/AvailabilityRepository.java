@@ -11,10 +11,10 @@ import java.util.List;
 public interface AvailabilityRepository extends MongoRepository<Availability, String> {
 
     // Find availability by displayId
-    List<Availability> findByDisplayId(Long displayId);
+    List<Availability> findByDisplayId(String displayId);
 
     // Find availability by displayId and date
-    Availability findByDisplayIdAndDate(Long displayId, LocalDate date);
+    Availability findByDisplayIdAndDate(String displayId, LocalDate date);
 
     // Optional: Find all availability records for a given displayId within a date range
     List<Availability> findByDisplayIdAndDateBetween(String displayId, LocalDate startDate, LocalDate endDate);

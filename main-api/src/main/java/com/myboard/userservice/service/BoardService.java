@@ -77,7 +77,7 @@ public class BoardService {
         boardRepository.save(board);
         // Prepare the response
         String boardSaveMessage = null;
-        if (board.getId() > 0) {
+        if (board.getId() != null) {
             boardSaveMessage = messageSource.getMessage("board.save.success", null, Locale.getDefault());
         } else {
             boardSaveMessage = messageSource.getMessage("board.save.failure", null, Locale.getDefault());
@@ -103,7 +103,7 @@ public class BoardService {
         boardRepository.save(board);
         // Prepare the response
         String boardSaveMessage = null;
-        if (board.getId() > 0) {
+        if (board.getId() != null) {
             boardSaveMessage = messageSource.getMessage("board.update.success", null, Locale.getDefault());
         } else {
             boardSaveMessage = messageSource.getMessage("board.update.failure", null, Locale.getDefault());

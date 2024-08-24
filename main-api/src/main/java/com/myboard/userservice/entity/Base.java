@@ -17,7 +17,7 @@ import javax.persistence.Id;
 public class Base {
 
     @Id
-    private Long id;
+    private String id;
 
     private boolean active = true;
 

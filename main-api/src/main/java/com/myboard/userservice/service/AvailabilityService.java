@@ -14,11 +14,11 @@ public class AvailabilityService {
     @Autowired
     private AvailabilityRepository availabilityRepository;
 
-    public Availability getAvailability(Long displayId, LocalDate date) {
+    public Availability getAvailability(String displayId, LocalDate date) {
         return availabilityRepository.findByDisplayIdAndDate(displayId, date);
     }
 
-    public List<Availability> getAvailabilityForDisplay(Long displayId) {
+    public List<Availability> getAvailabilityForDisplay(String displayId) {
         return availabilityRepository.findByDisplayId(displayId);
     }
 

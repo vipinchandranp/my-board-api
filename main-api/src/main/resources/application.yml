@@ -31,3 +31,5 @@ myboard:
     path: C:/Users/vipin/development/myboard-uploaded-data/board
   map:
     radius: 100
+  timeslots:
+    default-duration: 60  # Duration in minutes
