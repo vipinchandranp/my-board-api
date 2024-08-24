@@ -96,9 +96,4 @@ public class UserService {
         loginResponse.setJwtToken(jwtToken);
         flow.setData(loginResponse);
     }
-
-    public User getLoggedInUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (User) authentication.getPrincipal();
-    }
 }

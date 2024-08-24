@@ -44,9 +44,9 @@ public class DisplayController {
 
     @GetMapping("/get/{displayId}")
     public MainResponse get(@PathVariable String displayId) throws MBException {
-        DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
-        displayDeleteRequest.setDisplayId(displayId);
-        displayService.process(displayDeleteRequest, APIType.DISPLAY_GET);
+        DisplayGetRequest displayGetRequest = new DisplayGetRequest();
+        displayGetRequest.setDisplayId(displayId);
+        displayService.process(displayGetRequest, APIType.DISPLAY_GET);
         return new MainResponse<>(flow);
     }
 

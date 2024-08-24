@@ -17,7 +17,7 @@ import java.util.List;
 public class DisplayUpdateTimeSlotsRequest extends MainRequest {
     private String displayId;
     private String boardId;
-    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
     private LocalDate date;
     private List<TimeslotRequest> timeslots;
 }

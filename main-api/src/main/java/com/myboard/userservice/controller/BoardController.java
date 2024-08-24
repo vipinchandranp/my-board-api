@@ -1,6 +1,7 @@
 package com.myboard.userservice.controller;
 
 import com.myboard.userservice.controller.model.board.BoardDeleteRequest;
+import com.myboard.userservice.controller.model.board.BoardGetRequest;
 import com.myboard.userservice.controller.model.board.BoardSaveRequest;
 import com.myboard.userservice.controller.model.board.BoardUpdateRequest;
 import com.myboard.userservice.controller.model.common.MainResponse;
@@ -44,9 +45,9 @@ public class BoardController {
 
     @GetMapping("/get/{boardId}")
     public MainResponse get(@PathVariable String boardId) throws MBException {
-        BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
-        boardDeleteRequest.setBoardId(boardId);
-        boardService.process(boardDeleteRequest, APIType.BOARD_GET);
+        BoardGetRequest boardGetRequest = new BoardGetRequest();
+        boardGetRequest.setBoardId(boardId);
+        boardService.process(boardGetRequest, APIType.BOARD_GET);
         return new MainResponse<>(flow);
     }
 }

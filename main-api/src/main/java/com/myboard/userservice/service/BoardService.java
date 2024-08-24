@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Optional;
 
 import com.myboard.userservice.types.MediaType;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +38,9 @@ public class BoardService {
 
     @Autowired
     private MessageSource messageSource;
+
+    @Autowired
+    private MBUserDetailsService mbUserDetailsService;
 
     @Value("${myboard.board.path}")
     private String boardPath;
@@ -70,15 +74,24 @@ public class BoardService {
             flow.addError(messageSource.getMessage("board.save.failure", null, Locale.getDefault()));
             throw new MBException();
         }
-        User loggedInUser = userService.getLoggedInUser();
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
         MultipartFile mediaContent = boardSaveRequest.getMediaContent();
         Media media = Media.builder()
                 .mediaType(MediaType.IMAGE)
                 .mediaLocation(boardPath + "/" + loggedInUser)
-                .mediaName(mediaContent.getName())
-                .mediaContent(mediaContent.getBytes())
+                .mediaName(Optional.ofNullable(mediaContent).map(MultipartFile::getName).orElse(null))
+                .mediaContent(Optional.ofNullable(mediaContent).map(m -> {
+                    try {
+                        return m.getBytes();
+                    } catch (IOException e) {
+                        // Handle exception and provide default content
+                        return new byte[0];
+                    }
+                }).orElse(new byte[0]))
                 .build();
-        Board board = new Board(media);
+        Board board = Board.builder()
+                .name(boardSaveRequest.getName())
+                .media(media).build();
         boardRepository.save(board);
         // Prepare the response
         String boardSaveMessage = null;
@@ -96,7 +109,7 @@ public class BoardService {
             String message = messageSource.getMessage("board.update.failure", null, Locale.getDefault());
             throw new MBException(message);
         }
-        User loggedInUser = userService.getLoggedInUser();
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
         MultipartFile mediaContent = boardUpdateRequest.getMediaContent();
         Media media = Media.builder()
                 .mediaType(MediaType.IMAGE)

@@ -1,5 +1,6 @@
 package com.myboard.userservice.entity;
 
+import com.myboard.userservice.types.StatusType;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;

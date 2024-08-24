@@ -2,6 +2,7 @@ package com.myboard.userservice.service;
 
 import com.myboard.userservice.entity.TimeSlot;
 import com.myboard.userservice.properties.TimeslotProperties;
+import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +35,7 @@ public class TimeslotService {
             TimeSlot timeSlot = TimeSlot.builder()
                     .startTime(startTime.toString())
                     .endTime(slotEndTime.toString())
-                    .status("available")
+                    .status(StatusType.AVAILABLE)
                     .build();
 
             timeSlots.add(timeSlot);

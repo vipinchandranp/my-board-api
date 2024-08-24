@@ -11,6 +11,7 @@ import com.myboard.userservice.repository.BoardRepository;
 import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.types.APIType;
 import com.myboard.userservice.types.MediaType;
+import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -163,6 +164,7 @@ public class DisplayService {
         }
         flow.setData(display);
     }
+
     private void handleDisplayGetTimeSlots(DisplayGetTimeSlotsRequest displayGetTimeSlotsRequest) throws MBException, IOException {
         // Find the display by its ID
         Display display = displayRepository.findById(displayGetTimeSlotsRequest.getDisplayId()).orElse(null);
@@ -189,7 +191,6 @@ public class DisplayService {
         flow.setData(response);
     }
 
-
     private void handleDisplayUpdateTimeSlots(DisplayUpdateTimeSlotsRequest displayUpdateTimeSlotsRequest) throws MBException, IOException {
         // Find the display by its ID
         Display display = displayRepository.findById(displayUpdateTimeSlotsRequest.getDisplayId()).orElse(null);
@@ -198,21 +199,52 @@ public class DisplayService {
             throw new MBException(message);
         }
 
-        Board board = boardRepository.findById(displayUpdateTimeSlotsRequest.getDisplayId()).orElse(null);
+        Board board = boardRepository.findById(displayUpdateTimeSlotsRequest.getBoardId()).orElse(null);
         if (board == null) {
             String message = messageSource.getMessage("Board not found", null, Locale.getDefault());
             throw new MBException(message);
         }
+
+        // Get default timeslots
+        List<TimeSlot> defaultTimeSlots = timeslotService.getDefaultTimeSlots();
 
         // Check if availability for the given date already exists
         Availability existingAvailability = availabilityRepository.findByDisplayIdAndDate(display.getId(), displayUpdateTimeSlotsRequest.getDate());
 
         if (existingAvailability != null) {
             // If availability exists, update the existing time slots
-            existingAvailability.setTimeSlots(displayUpdateTimeSlotsRequest.getTimeslots()
-                    .stream()
-                    .map(this::convertToEntity)
-                    .collect(Collectors.toList()));
+
+            // Create a list of existing timeslots
+            List<TimeSlot> updatedTimeSlots = existingAvailability.getTimeSlots();
+
+            // Update the timeslots with the new ones from the request
+            for (TimeslotRequest timeslotRequest : displayUpdateTimeSlotsRequest.getTimeslots()) {
+                // Find matching timeslot by start and end time
+                Optional<TimeSlot> existingSlotOpt = updatedTimeSlots.stream()
+                        .filter(ts -> ts.getStartTime().equals(timeslotRequest.getStartTime()) && ts.getEndTime().equals(timeslotRequest.getEndTime()))
+                        .findFirst();
+
+                if (existingSlotOpt.isPresent()) {
+                    // If the timeslot exists, update its status
+                    TimeSlot existingSlot = existingSlotOpt.get();
+                    existingSlot.setStatus(StatusType.UNAVAILABLE);
+                } else {
+                    // If the timeslot does not exist, add it
+                    updatedTimeSlots.add(convertToEntity(timeslotRequest, StatusType.AVAILABLE));
+                }
+            }
+
+            // Combine with default timeslots (add those that are missing)
+            for (TimeSlot defaultSlot : defaultTimeSlots) {
+                boolean isPresent = updatedTimeSlots.stream()
+                        .anyMatch(ts -> ts.getStartTime().equals(defaultSlot.getStartTime()) && ts.getEndTime().equals(defaultSlot.getEndTime()));
+
+                if (!isPresent) {
+                    updatedTimeSlots.add(defaultSlot);
+                }
+            }
+
+            existingAvailability.setTimeSlots(updatedTimeSlots);
             availabilityRepository.save(existingAvailability);
         } else {
             // If availability does not exist, create a new entry
@@ -220,10 +252,24 @@ public class DisplayService {
             newAvailability.setDisplay(display);
             newAvailability.setBoard(board);
             newAvailability.setDate(displayUpdateTimeSlotsRequest.getDate());
-            newAvailability.setTimeSlots(displayUpdateTimeSlotsRequest.getTimeslots()
+
+            // Convert request timeslots and add them
+            List<TimeSlot> newTimeSlots = displayUpdateTimeSlotsRequest.getTimeslots()
                     .stream()
-                    .map(this::convertToEntity)
-                    .collect(Collectors.toList()));
+                    .map(request -> convertToEntity(request, StatusType.AVAILABLE))
+                    .collect(Collectors.toList());
+
+            // Combine with default timeslots
+            for (TimeSlot defaultSlot : defaultTimeSlots) {
+                boolean isPresent = newTimeSlots.stream()
+                        .anyMatch(ts -> ts.getStartTime().equals(defaultSlot.getStartTime()) && ts.getEndTime().equals(defaultSlot.getEndTime()));
+
+                if (!isPresent) {
+                    newTimeSlots.add(defaultSlot);
+                }
+            }
+
+            newAvailability.setTimeSlots(newTimeSlots);
             availabilityRepository.save(newAvailability);
         }
 
@@ -232,12 +278,13 @@ public class DisplayService {
         flow.addInfo(saveMessage);
     }
 
+
     // Helper method to convert TimeslotRequest to TimeSlot entity
-    private TimeSlot convertToEntity(TimeslotRequest timeslotRequest) {
+    private TimeSlot convertToEntity(TimeslotRequest timeslotRequest, StatusType statusType) {
         TimeSlot timeSlot = new TimeSlot();
         timeSlot.setStartTime(timeslotRequest.getStartTime());
         timeSlot.setEndTime(timeslotRequest.getEndTime());
-        timeSlot.setStatus(timeslotRequest.getStatus());
+        timeSlot.setStatus(statusType);
         return timeSlot;
     }
 
