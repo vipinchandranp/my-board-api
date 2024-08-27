@@ -1,6 +1,10 @@
 package com.myboard.userservice.service;
 
+import com.myboard.userservice.entity.Board;
+import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.entity.User;
+import com.myboard.userservice.repository.BoardRepository;
+import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -11,12 +15,20 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class MBUserDetailsService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BoardRepository boardRepository;
+
+    @Autowired
+    private DisplayRepository displayRepository;
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -45,6 +57,14 @@ public class MBUserDetailsService implements UserDetailsService {
         }
         // If principal is not an instance of UserDetails, handle accordingly (maybe anonymous user)
         throw new IllegalStateException("User not authenticated");
+    }
+
+    public List<Display> getDisplaysOfLoggedInUser() {
+        return displayRepository.findByCreatedBy(getLoggedInUser());
+    }
+
+    public List<Board> getBoardsOfLoggedInUser() {
+        return boardRepository.findByCreatedBy(getLoggedInUser());
     }
 
 }

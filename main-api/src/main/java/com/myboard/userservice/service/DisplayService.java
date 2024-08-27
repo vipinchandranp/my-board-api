@@ -1,5 +1,7 @@
 package com.myboard.userservice.service;
 
+import com.myboard.userservice.controller.model.board.BoardApprovalRequest;
+import com.myboard.userservice.controller.model.board.DisplayApprovalRequest;
 import com.myboard.userservice.controller.model.common.MainRequest;
 import com.myboard.userservice.controller.model.common.TimeslotRequest;
 import com.myboard.userservice.controller.model.common.WorkFlow;
@@ -72,12 +74,35 @@ public class DisplayService {
                 case DISPLAY_UPDATE_TIMESLOTS:
                     handleDisplayUpdateTimeSlots((DisplayUpdateTimeSlotsRequest) baseRequest);
                     break;
+                case DISPLAY_APPROVAL:
+                    handleDisplayApproval((DisplayApprovalRequest) baseRequest);
+                    break;
                 default:
                     throw new MBException("Invalid API type");
             }
         } catch (Exception e) {
             throw new MBException(e, e.getMessage());
         }
+    }
+
+    private void handleDisplayApproval(DisplayApprovalRequest displayApprovalRequest) {
+        Display display = displayRepository.findById(displayApprovalRequest.getDisplayId()).orElse(null);
+        if (display == null) {
+            throw new MBException("Display Not Found");
+        }
+        if (displayApprovalRequest.isApprove()) {
+            display.setStatus(StatusType.APPROVED);
+        } else {
+            display.setStatus(StatusType.REJECTED);
+        }
+        displayRepository.save(display);
+        String displaySaveMessage = null;
+        if (display.getId() != null) {
+            displaySaveMessage = "Display updated successfully";
+        } else {
+            displaySaveMessage = "Failed to update display";
+        }
+        flow.addInfo(displaySaveMessage);
     }
 
     private void handleDisplaySave(DisplaySaveRequest displaySaveRequest) throws MBException, IOException {

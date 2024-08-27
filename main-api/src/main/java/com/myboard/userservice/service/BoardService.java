@@ -1,17 +1,17 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.controller.model.board.BoardDeleteRequest;
-import com.myboard.userservice.controller.model.board.BoardGetRequest;
-import com.myboard.userservice.controller.model.board.BoardSaveRequest;
-import com.myboard.userservice.controller.model.board.BoardUpdateRequest;
+import com.myboard.userservice.controller.model.board.*;
 import com.myboard.userservice.controller.model.common.MainRequest;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.entity.Board;
+import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.entity.Media;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.BoardRepository;
+import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.types.APIType;
+import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -37,6 +37,9 @@ public class BoardService {
     private BoardRepository boardRepository;
 
     @Autowired
+    private DisplayRepository displayRepository;
+
+    @Autowired
     private MessageSource messageSource;
 
     @Autowired
@@ -60,12 +63,36 @@ public class BoardService {
                 case BOARD_DELETE:
                     handleBoardDelete((BoardDeleteRequest) baseRequest);
                     break;
+                case BOARD_APPROVAL:
+                    handleBoardApproval((BoardApprovalRequest) baseRequest);
+                    break;
                 default:
                     throw new MBException("Invalid API type");
             }
         } catch (Exception e) {
             throw new MBException(e, e.getMessage());
         }
+    }
+
+    private void handleBoardApproval(BoardApprovalRequest boardApprovalStatusRequest) {
+        Board board = boardRepository.findById(boardApprovalStatusRequest.getBoardId()).orElse(null);
+        if (board == null) {
+            String message = messageSource.getMessage("board.update.failure", null, Locale.getDefault());
+            throw new MBException(message);
+        }
+        if (boardApprovalStatusRequest.isApprove()) {
+            board.setStatus(StatusType.APPROVED);
+        } else {
+            board.setStatus(StatusType.REJECTED);
+        }
+        boardRepository.save(board);
+        String boardSaveMessage = null;
+        if (board.getId() != null) {
+            boardSaveMessage = "Board updated successfully";
+        } else {
+            boardSaveMessage = "Failed to update board";
+        }
+        flow.addInfo(boardSaveMessage);
     }
 
     private void handleBoardSave(BoardSaveRequest boardSaveRequest) throws MBException, IOException {

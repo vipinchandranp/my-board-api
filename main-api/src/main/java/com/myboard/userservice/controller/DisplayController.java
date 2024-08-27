@@ -1,5 +1,7 @@
 package com.myboard.userservice.controller;
 
+import com.myboard.userservice.controller.model.board.BoardApprovalRequest;
+import com.myboard.userservice.controller.model.board.DisplayApprovalRequest;
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.display.*;
@@ -64,4 +66,11 @@ public class DisplayController {
         displayService.process(displaySaveTimeSlots, APIType.DISPLAY_UPDATE_TIMESLOTS);
         return new MainResponse<>(flow);
     }
+
+    @PutMapping("/approval")
+    public MainResponse get(@RequestBody DisplayApprovalRequest displayApprovalRequest) throws MBException {
+        displayService.process(displayApprovalRequest, APIType.DISPLAY_APPROVAL);
+        return new MainResponse<>(flow);
+    }
+
 }

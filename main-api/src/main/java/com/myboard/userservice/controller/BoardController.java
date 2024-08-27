@@ -1,9 +1,6 @@
 package com.myboard.userservice.controller;
 
-import com.myboard.userservice.controller.model.board.BoardDeleteRequest;
-import com.myboard.userservice.controller.model.board.BoardGetRequest;
-import com.myboard.userservice.controller.model.board.BoardSaveRequest;
-import com.myboard.userservice.controller.model.board.BoardUpdateRequest;
+import com.myboard.userservice.controller.model.board.*;
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.exception.MBException;
@@ -48,6 +45,12 @@ public class BoardController {
         BoardGetRequest boardGetRequest = new BoardGetRequest();
         boardGetRequest.setBoardId(boardId);
         boardService.process(boardGetRequest, APIType.BOARD_GET);
+        return new MainResponse<>(flow);
+    }
+
+    @PutMapping("/approval")
+    public MainResponse approval(@RequestBody BoardApprovalRequest boardApproveRequest) throws MBException {
+        boardService.process(boardApproveRequest, APIType.BOARD_APPROVAL);
         return new MainResponse<>(flow);
     }
 }

@@ -22,7 +22,7 @@ public class Board extends Base {
 
     private List<Comment> comments = new ArrayList<>();
 
-    private StatusType validationStatus = StatusType.WAITING_FOR_APPROVAL;
+    private StatusType status = StatusType.WAITING_FOR_APPROVAL;
 
     private Media media;
 
