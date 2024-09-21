@@ -27,18 +27,15 @@ public class ControllerAdvice {
     @ExceptionHandler(MBException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public MainResponse handleMyBoardException(MBException ex) {
-        StringWriter sw = new StringWriter();
-        ex.printStackTrace(new PrintWriter(sw));
-        String stackTrace = sw.toString();
-        System.out.println(stackTrace);
-        flow.addError(stackTrace);
+        ex.printStackTrace();
+        flow.addError(ex.getMessage());
         return new MainResponse(flow);
     }
 
     @ExceptionHandler(Exception.class)
     public MainResponse handleGlobalException(Exception ex) {
-        String internalError = messageSource.getMessage("Unexpected error occurred", null, Locale.getDefault());
-        flow.addError(internalError);
+        flow.addError("Unexpected error occurred");
+        ex.printStackTrace();
         return new MainResponse(flow);
     }
 }

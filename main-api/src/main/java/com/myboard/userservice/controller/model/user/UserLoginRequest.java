@@ -1,12 +1,10 @@
 package com.myboard.userservice.controller.model.user;
 
-import com.myboard.userservice.controller.model.common.MainRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class UserLoginRequest extends MainRequest {
+public class UserLoginRequest {
 
     private String username;
 

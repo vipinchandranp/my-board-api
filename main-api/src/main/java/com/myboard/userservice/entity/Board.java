@@ -3,6 +3,7 @@ package com.myboard.userservice.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.types.StatusType;
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -22,12 +23,8 @@ public class Board extends Base {
 
     private List<Comment> comments = new ArrayList<>();
 
+    private List<MediaFile> mediaFiles = new ArrayList<>();
+
     private StatusType status = StatusType.WAITING_FOR_APPROVAL;
-
-    private Media media;
-
-    public Board(Media media) {
-        this.media = media;
-    }
 
 }

@@ -51,7 +51,7 @@ public class SecurityConfig {
 							response.getWriter().flush();
 						}))
 				.authorizeHttpRequests(authz -> authz
-						.requestMatchers("/user/login", "/user/signup","/error").permitAll()
+						.requestMatchers("/user/login", "/user/signup","/error","/file/**").permitAll()
 						.anyRequest().authenticated());
 
 		return http.build();

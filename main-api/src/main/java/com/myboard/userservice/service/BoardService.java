@@ -1,28 +1,34 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.controller.model.board.*;
-import com.myboard.userservice.controller.model.common.MainRequest;
+import com.myboard.userservice.controller.model.board.request.BoardApprovalRequest;
+import com.myboard.userservice.controller.model.board.request.BoardGetRequest;
+import com.myboard.userservice.controller.model.board.response.BoardGetBoardsByIdResponse;
+import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
+import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.entity.Board;
-import com.myboard.userservice.entity.Display;
-import com.myboard.userservice.entity.Media;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.BoardRepository;
 import com.myboard.userservice.repository.DisplayRepository;
-import com.myboard.userservice.types.APIType;
+import com.myboard.userservice.types.MediaType;
 import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Locale;
-import java.util.Optional;
-
-import com.myboard.userservice.types.MediaType;
-import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class BoardService {
@@ -48,126 +54,21 @@ public class BoardService {
     @Value("${myboard.board.path}")
     private String boardPath;
 
-    public void process(MainRequest baseRequest, APIType apiType) throws MBException {
-        try {
-            switch (apiType) {
-                case BOARD_GET:
-                    handleBoardGet((BoardGetRequest) baseRequest);
-                    break;
-                case BOARD_SAVE:
-                    handleBoardSave((BoardSaveRequest) baseRequest);
-                    break;
-                case BOARD_UPDATE:
-                    handleBoardUpdate((BoardUpdateRequest) baseRequest);
-                    break;
-                case BOARD_DELETE:
-                    handleBoardDelete((BoardDeleteRequest) baseRequest);
-                    break;
-                case BOARD_APPROVAL:
-                    handleBoardApproval((BoardApprovalRequest) baseRequest);
-                    break;
-                default:
-                    throw new MBException("Invalid API type");
-            }
-        } catch (Exception e) {
-            throw new MBException(e, e.getMessage());
-        }
-    }
+    @Autowired
+    private UtilService utilService;
 
-    private void handleBoardApproval(BoardApprovalRequest boardApprovalStatusRequest) {
+    public void approveBoard(BoardApprovalRequest boardApprovalStatusRequest) {
         Board board = boardRepository.findById(boardApprovalStatusRequest.getBoardId()).orElse(null);
         if (board == null) {
             String message = messageSource.getMessage("board.update.failure", null, Locale.getDefault());
             throw new MBException(message);
         }
-        if (boardApprovalStatusRequest.isApprove()) {
-            board.setStatus(StatusType.APPROVED);
-        } else {
-            board.setStatus(StatusType.REJECTED);
-        }
+        board.setStatus(boardApprovalStatusRequest.isApprove() ? StatusType.APPROVED : StatusType.REJECTED);
         boardRepository.save(board);
-        String boardSaveMessage = null;
-        if (board.getId() != null) {
-            boardSaveMessage = "Board updated successfully";
-        } else {
-            boardSaveMessage = "Failed to update board";
-        }
-        flow.addInfo(boardSaveMessage);
+        flow.addInfo("Board updated successfully");
     }
 
-    private void handleBoardSave(BoardSaveRequest boardSaveRequest) throws MBException, IOException {
-        // Check if the board already exists
-        if (boardRepository.existsByName(boardSaveRequest.getName())) {
-            flow.addError(messageSource.getMessage("board.save.failure", null, Locale.getDefault()));
-            throw new MBException();
-        }
-        User loggedInUser = mbUserDetailsService.getLoggedInUser();
-        MultipartFile mediaContent = boardSaveRequest.getMediaContent();
-        Media media = Media.builder()
-                .mediaType(MediaType.IMAGE)
-                .mediaLocation(boardPath + "/" + loggedInUser)
-                .mediaName(Optional.ofNullable(mediaContent).map(MultipartFile::getName).orElse(null))
-                .mediaContent(Optional.ofNullable(mediaContent).map(m -> {
-                    try {
-                        return m.getBytes();
-                    } catch (IOException e) {
-                        // Handle exception and provide default content
-                        return new byte[0];
-                    }
-                }).orElse(new byte[0]))
-                .build();
-        Board board = Board.builder()
-                .name(boardSaveRequest.getName())
-                .media(media).build();
-        boardRepository.save(board);
-        // Prepare the response
-        String boardSaveMessage = null;
-        if (board.getId() != null) {
-            boardSaveMessage = messageSource.getMessage("board.save.success", null, Locale.getDefault());
-        } else {
-            boardSaveMessage = messageSource.getMessage("board.save.failure", null, Locale.getDefault());
-        }
-        flow.addInfo(boardSaveMessage);
-    }
-
-    private void handleBoardUpdate(BoardUpdateRequest boardUpdateRequest) throws MBException, IOException {
-        Board board = boardRepository.findById(boardUpdateRequest.getBoardId()).orElse(null);
-        if (board == null) {
-            String message = messageSource.getMessage("board.update.failure", null, Locale.getDefault());
-            throw new MBException(message);
-        }
-        User loggedInUser = mbUserDetailsService.getLoggedInUser();
-        MultipartFile mediaContent = boardUpdateRequest.getMediaContent();
-        Media media = Media.builder()
-                .mediaType(MediaType.IMAGE)
-                .mediaLocation(boardPath + "/" + loggedInUser)
-                .mediaName(mediaContent.getName())
-                .mediaContent(mediaContent.getBytes())
-                .build();
-        board.setMedia(media);
-        boardRepository.save(board);
-        // Prepare the response
-        String boardSaveMessage = null;
-        if (board.getId() != null) {
-            boardSaveMessage = messageSource.getMessage("board.update.success", null, Locale.getDefault());
-        } else {
-            boardSaveMessage = messageSource.getMessage("board.update.failure", null, Locale.getDefault());
-        }
-        flow.addInfo(boardSaveMessage);
-    }
-
-    private void handleBoardDelete(BoardDeleteRequest boardDeleteRequest) throws MBException, IOException {
-        try {
-            boardRepository.deleteById(boardDeleteRequest.getBoardId());
-        } catch (Exception e) {
-            String message = messageSource.getMessage("board.delete.failure", null, Locale.getDefault());
-            throw new MBException(message);
-        }
-        String boardSaveMessage = messageSource.getMessage("board.delete.success", null, Locale.getDefault());
-        flow.addInfo(boardSaveMessage);
-    }
-
-    private void handleBoardGet(BoardGetRequest boardGetRequest) throws MBException, IOException {
+    public void getBoard(BoardGetRequest boardGetRequest) throws MBException {
         Board board = boardRepository.findById(boardGetRequest.getBoardId()).orElse(null);
         if (board == null) {
             String message = messageSource.getMessage("board.get.failure", null, Locale.getDefault());
@@ -175,4 +76,149 @@ public class BoardService {
         }
         flow.setData(board);
     }
+
+    public void saveBoard(MultipartFile file, String boardName) throws MBException {
+        if (file.isEmpty()) {
+            throw new MBException("File is empty");
+        }
+        try {
+            User user = mbUserDetailsService.getLoggedInUser();
+            String username = user.getUsername();
+            String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(boardPath, username, uniqueFileName);
+
+            Files.createDirectories(filePath.getParent());
+            Files.write(filePath, file.getBytes());
+
+            // Use UtilService to determine the media type
+            MediaType mediaType = utilService.determineMediaType(file);
+            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/board/"+uniqueFileName, mediaType);
+
+            Board board = (Board) boardRepository.findByName(boardName).orElseGet(() -> {
+                Board newBoard = new Board();
+                newBoard.setName(boardName);
+                newBoard.setCreatedBy(user);
+                newBoard.setCreatedAt(LocalDateTime.now());
+                newBoard.setMediaFiles(new ArrayList<>());
+                return newBoard;
+            });
+
+            board.getMediaFiles().add(mediaFile);
+            board.setModifiedBy(user);
+            board.setLastModifiedAt(LocalDateTime.now());
+            boardRepository.save(board);
+            flow.setData(Map.of("boardId", board.getId(), "fileName", uniqueFileName));
+
+        } catch (IOException e) {
+            throw new MBException("Failed to save file", e);
+        }
+    }
+
+    public void addMedia(String boardId, MultipartFile file) throws MBException {
+        if (file.isEmpty()) {
+            throw new MBException("File is empty");
+        }
+        Board board = boardRepository.findById(boardId).orElse(null);
+        if (board == null) {
+            throw new MBException("Board not found");
+        }
+        try {
+            User loggedInUser = mbUserDetailsService.getLoggedInUser();
+            String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            Path userDirectory = Paths.get(boardPath, loggedInUser.getId().toString());
+            Files.createDirectories(userDirectory);
+            Path filePath = userDirectory.resolve(uniqueFileName);
+            Files.write(filePath, file.getBytes());
+
+            MediaType mediaType = utilService.determineMediaType(file);
+            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/board/"+uniqueFileName, mediaType);
+            board.getMediaFiles().add(mediaFile);
+            boardRepository.save(board);
+            flow.setData(Map.of("boardId", board.getId(), "fileName", uniqueFileName));
+            flow.addInfo("Media added successfully");
+        } catch (IOException e) {
+            throw new MBException("Failed to save media", e);
+        }
+    }
+
+    public void deleteBoard(String boardId) throws MBException {
+        Board board = boardRepository.findById(boardId).orElse(null);
+        if (board == null) {
+            throw new MBException("Board not found");
+        }
+        try {
+            User loggedInUser = mbUserDetailsService.getLoggedInUser();
+            for (MediaFile mediaFile : board.getMediaFiles()) {
+                Path mediaPath = Paths.get(boardPath, loggedInUser.getId().toString(), mediaFile.getFileName());
+                Files.deleteIfExists(mediaPath);
+            }
+            boardRepository.deleteById(boardId);
+            flow.addInfo("Board deleted successfully");
+        } catch (IOException e) {
+            throw new MBException("Failed to delete board", e);
+        }
+    }
+
+    public void deleteMedia(String boardId, String mediaName) throws MBException {
+        Board board = boardRepository.findById(boardId).orElse(null);
+        if (board == null) {
+            throw new MBException("Board not found");
+        }
+
+        List<MediaFile> mediaFiles = board.getMediaFiles().stream()
+                .filter(mediaFile -> mediaFile.getFileName().equals(mediaName))
+                .collect(Collectors.toList());
+
+        if (mediaFiles.isEmpty()) {
+            throw new MBException("Media not found on the board");
+        }
+
+        try {
+            User loggedInUser = mbUserDetailsService.getLoggedInUser();
+            Path mediaPath = Paths.get(boardPath, loggedInUser.getId().toString(), mediaName);
+            Files.deleteIfExists(mediaPath);
+
+            board.getMediaFiles().removeIf(mediaFile -> mediaFile.getFileName().equals(mediaName));
+            boardRepository.save(board);
+            flow.addInfo("Media deleted successfully");
+        } catch (IOException e) {
+            throw new MBException("Failed to delete media", e);
+        }
+    }
+
+    public List<BoardGetBoardsResponse> getBoards(int page, int size) throws MBException {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Board> boardPage = boardRepository.findAll(pageable);
+        List<BoardGetBoardsResponse> boards = boardPage.getContent().stream()
+                .map(board -> new BoardGetBoardsResponse(
+                        board.getId(),
+                        board.getName(),
+                        board.getMediaFiles(),
+                        board.getCreatedAt(),
+                        board.getStatus().toString()
+                ))
+                .collect(Collectors.toList());
+
+        flow.setData(boards);
+        flow.addInfo("Boards fetched successfully");
+        return boards;
+    }
+
+    public void getBoardById(String boardId) throws MBException {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new MBException("Board not found"));
+
+        // Convert media file paths to MediaFile objects
+        List<MediaFile> mediaFiles = board.getMediaFiles();
+
+        flow.setData(new BoardGetBoardsByIdResponse(
+                board.getId(),
+                board.getName(),
+                board.getCreatedAt(),
+                board.getStatus().name(),
+                mediaFiles // Pass the list of MediaFile objects
+        ));
+    }
+
+
 }

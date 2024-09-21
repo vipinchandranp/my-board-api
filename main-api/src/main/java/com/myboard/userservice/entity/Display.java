@@ -1,5 +1,6 @@
 package com.myboard.userservice.entity;
 
+import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.types.StatusType;
 import lombok.*;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -18,9 +19,6 @@ import java.util.List;
 @Document(collection = "display")
 public class Display extends Base {
 
-    public Display(Media media) {
-        this.media = media;
-    }
 
     private String name;
 
@@ -32,7 +30,7 @@ public class Display extends Base {
 
     private StatusType status = StatusType.WAITING_FOR_APPROVAL;
 
-    private Media media;
+    private List<MediaFile> mediaFiles = new ArrayList<>();
 
     // Reference to the Availability collection
     @DBRef(lazy = true)

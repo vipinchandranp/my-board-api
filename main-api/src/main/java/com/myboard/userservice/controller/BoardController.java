@@ -1,56 +1,59 @@
 package com.myboard.userservice.controller;
 
-import com.myboard.userservice.controller.model.board.*;
+import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
 import com.myboard.userservice.controller.model.common.MainResponse;
-import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.BoardService;
-import com.myboard.userservice.types.APIType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/board")
-public class BoardController {
+public class BoardController extends BaseController {
 
     @Autowired
     private BoardService boardService;
 
-    @Autowired
-    private WorkFlow flow;
 
-    @PostMapping("/save")
-    public MainResponse save(@RequestBody BoardSaveRequest boardSaveRequest) throws MBException {
-        boardService.process(boardSaveRequest, APIType.BOARD_SAVE);
-        return new MainResponse<>(flow);
+    @PostMapping("/media/save")
+    public MainResponse<String> saveBoard(@RequestParam("file") MultipartFile file, @RequestParam String boardName) throws MBException, IOException {
+        boardService.saveBoard(file, boardName);
+        return buildResponse();
     }
 
-    @PostMapping("/update")
-    public MainResponse update(@RequestBody BoardUpdateRequest boardSaveRequest) throws MBException {
-        boardService.process(boardSaveRequest, APIType.BOARD_UPDATE);
-        return new MainResponse<>(flow);
+    @PutMapping("/media/add/{boardId}")
+    public MainResponse<String> addMedia(@PathVariable String boardId, @RequestParam("file") MultipartFile file) throws MBException, IOException {
+        boardService.addMedia(boardId, file);
+        return buildResponse();
     }
 
-    @GetMapping("/delete/{boardId}")
-    public MainResponse delete(@PathVariable String boardId) throws MBException {
-        BoardDeleteRequest boardDeleteRequest = new BoardDeleteRequest();
-        boardDeleteRequest.setBoardId(boardId);
-        boardService.process(boardDeleteRequest, APIType.BOARD_DELETE);
-        return new MainResponse<>(flow);
+    @DeleteMapping("/media/delete/{boardId}/{mediaName}")
+    public MainResponse<String> deleteMedia(@PathVariable String boardId, @PathVariable String mediaName) throws MBException {
+        boardService.deleteMedia(boardId, mediaName);
+        return buildResponse();
     }
 
-    @GetMapping("/get/{boardId}")
-    public MainResponse get(@PathVariable String boardId) throws MBException {
-        BoardGetRequest boardGetRequest = new BoardGetRequest();
-        boardGetRequest.setBoardId(boardId);
-        boardService.process(boardGetRequest, APIType.BOARD_GET);
-        return new MainResponse<>(flow);
+    @DeleteMapping("/delete/{boardId}")
+    public MainResponse<String> deleteBoard(@PathVariable String boardId) throws MBException {
+        boardService.deleteBoard(boardId);
+        return buildResponse();
     }
 
-    @PutMapping("/approval")
-    public MainResponse approval(@RequestBody BoardApprovalRequest boardApproveRequest) throws MBException {
-        boardService.process(boardApproveRequest, APIType.BOARD_APPROVAL);
-        return new MainResponse<>(flow);
+    @GetMapping("/list")
+    public MainResponse<List<BoardGetBoardsResponse>> getBoards(@RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "4") int size) throws MBException {
+        boardService.getBoards(page, size);
+        return buildResponse();
+    }
+
+    @GetMapping("/{boardId}")
+    public MainResponse<BoardGetBoardsResponse> getBoardById(@PathVariable String boardId) throws MBException {
+        boardService.getBoardById(boardId);
+        return buildResponse();
     }
 }

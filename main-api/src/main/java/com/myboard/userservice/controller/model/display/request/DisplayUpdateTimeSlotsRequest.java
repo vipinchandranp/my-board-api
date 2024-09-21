@@ -1,20 +1,15 @@
-package com.myboard.userservice.controller.model.display;
+package com.myboard.userservice.controller.model.display.request;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.myboard.userservice.controller.model.common.MainRequest;
 import com.myboard.userservice.controller.model.common.TimeslotRequest;
 import com.myboard.userservice.util.LocalDateDeserializer;
-import com.myboard.userservice.util.LocalDateSerializer;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class DisplayUpdateTimeSlotsRequest extends MainRequest {
+public class DisplayUpdateTimeSlotsRequest {
     private String displayId;
     private String boardId;
     @JsonDeserialize(using = LocalDateDeserializer.class)

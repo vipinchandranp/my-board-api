@@ -1,4 +1,7 @@
 server:
+  web:
+    resources:
+      static-locations: "file:/C:/Users/vipin/development/"
   servlet:
     context-path: /myboard
   error:
@@ -7,6 +10,22 @@ server:
       enabled: false  # Disable the default error page
     include-message: always
 spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: codeployer@gmail.com
+    password: Nipiv1989!
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
   data:
     mongodb:
       #uri: mongodb://cosmosrgeastusc0f3d675-784f-433e-9759db:8m9xC4DakRGbV5gWeOaOLaSPszKwQETdYjwVzmC6AsgbHo5IMrXqh43JsprmlGcGnIIdNmhhOfVZACDbXbuajw==@cosmosrgeastusc0f3d675-784f-433e-9759db.mongo.cosmos.azure.com:10255/myboard-database?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@cosmosrgeastusc0f3d675-784f-433e-9759db@

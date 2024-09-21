@@ -1,22 +1,25 @@
 package com.myboard.userservice.controller;
 
-import com.myboard.userservice.controller.model.board.BoardApprovalRequest;
-import com.myboard.userservice.controller.model.board.DisplayApprovalRequest;
+import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
+import com.myboard.userservice.controller.model.board.request.DisplayApprovalRequest;
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.common.WorkFlow;
-import com.myboard.userservice.controller.model.display.*;
+import com.myboard.userservice.controller.model.display.request.*;
+import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysResponse;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.DisplayService;
-import com.myboard.userservice.types.APIType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/display")
-public class DisplayController {
+public class DisplayController extends BaseController {
 
     @Autowired
     private DisplayService displayService;
@@ -24,53 +27,78 @@ public class DisplayController {
     @Autowired
     private WorkFlow flow;
 
-    @PostMapping("/save")
-    public MainResponse save(@RequestBody DisplaySaveRequest displaySaveRequest) throws MBException {
-        displayService.process(displaySaveRequest, APIType.DISPLAY_SAVE);
-        return new MainResponse<>(flow);
-    }
-
-    @PostMapping("/update")
-    public MainResponse update(@RequestBody DisplayUpdateRequest displayUpdateRequest) throws MBException {
-        displayService.process(displayUpdateRequest, APIType.DISPLAY_UPDATE);
-        return new MainResponse<>(flow);
-    }
-
     @GetMapping("/delete/{id}")
-    public MainResponse delete(@PathVariable String displayId) throws MBException {
+    public MainResponse delete(@PathVariable String displayId) throws MBException, IOException {
         DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
         displayDeleteRequest.setDisplayId(displayId);
-        displayService.process(displayDeleteRequest, APIType.DISPLAY_DELETE);
+        displayService.handleDisplayDelete(displayDeleteRequest);
         return new MainResponse<>(flow);
     }
 
     @GetMapping("/get/{displayId}")
-    public MainResponse get(@PathVariable String displayId) throws MBException {
+    public MainResponse get(@PathVariable String displayId) throws MBException, IOException {
         DisplayGetRequest displayGetRequest = new DisplayGetRequest();
         displayGetRequest.setDisplayId(displayId);
-        displayService.process(displayGetRequest, APIType.DISPLAY_GET);
+        displayService.handleDisplayGet(displayGetRequest);
         return new MainResponse<>(flow);
     }
 
     @GetMapping("/get/time-slots")
-    public MainResponse getTimeSlots(@RequestParam String displayId, @RequestParam LocalDate date) throws MBException {
+    public MainResponse getTimeSlots(@RequestParam String displayId, @RequestParam LocalDate date) throws MBException, IOException {
         DisplayGetTimeSlotsRequest displayGetTimeSlotRequest = new DisplayGetTimeSlotsRequest();
         displayGetTimeSlotRequest.setDisplayId(displayId);
         displayGetTimeSlotRequest.setDate(date);
-        displayService.process(displayGetTimeSlotRequest, APIType.DISPLAY_GET_TIMESLOTS);
+        displayService.handleDisplayGetTimeSlots(displayGetTimeSlotRequest);
         return new MainResponse<>(flow);
     }
 
     @PutMapping("/update/time-slots")
-    public MainResponse updateTimeSlots(@RequestBody DisplayUpdateTimeSlotsRequest displaySaveTimeSlots) throws MBException {
-        displayService.process(displaySaveTimeSlots, APIType.DISPLAY_UPDATE_TIMESLOTS);
+    public MainResponse updateTimeSlots(@RequestBody DisplayUpdateTimeSlotsRequest displaySaveTimeSlots) throws MBException, IOException {
+        displayService.handleDisplayUpdateTimeSlots(displaySaveTimeSlots);
         return new MainResponse<>(flow);
     }
 
     @PutMapping("/approval")
-    public MainResponse get(@RequestBody DisplayApprovalRequest displayApprovalRequest) throws MBException {
-        displayService.process(displayApprovalRequest, APIType.DISPLAY_APPROVAL);
+    public MainResponse approval(@RequestBody DisplayApprovalRequest displayApprovalRequest) throws MBException {
+        displayService.handleDisplayApproval(displayApprovalRequest);
         return new MainResponse<>(flow);
+    }
+
+    @PostMapping("/media/save")
+    public MainResponse<String> saveBoard(@RequestParam("file") MultipartFile file, @RequestParam String displayName) throws MBException, IOException {
+        displayService.saveDisplay(file, displayName);
+        return buildResponse();
+    }
+
+    @PutMapping("/media/add/{boardId}")
+    public MainResponse<String> addMedia(@PathVariable String boardId, @RequestParam("file") MultipartFile file) throws MBException, IOException {
+        displayService.addMedia(boardId, file);
+        return buildResponse();
+    }
+
+    @DeleteMapping("/media/delete/{displayId}/{mediaName}")
+    public MainResponse<String> deleteMedia(@PathVariable String displayId, @PathVariable String mediaName) throws MBException {
+        displayService.deleteMedia(displayId, mediaName);
+        return buildResponse();
+    }
+
+    @DeleteMapping("/delete/{displayId}")
+    public MainResponse<String> deleteBoard(@PathVariable String displayId) throws MBException {
+        displayService.deleteDisplay(displayId);
+        return buildResponse();
+    }
+
+    @GetMapping("/list")
+    public MainResponse<List<DisplayGetDisplaysResponse>> getBoards(@RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "4") int size) throws MBException {
+        displayService.getDisplays(page, size);
+        return buildResponse();
+    }
+
+    @GetMapping("/{displayId}")
+    public MainResponse<DisplayGetDisplaysResponse> getBoardById(@PathVariable String displayId) throws MBException {
+        displayService.getDisplayById(displayId);
+        return buildResponse();
     }
 
 }

@@ -18,7 +18,7 @@ public class MBException extends RuntimeException {
         this.message = message;
     }
 
-    public MBException(Exception ex, String message) {
+    public MBException(String message, Exception ex) {
         super(message, ex);
     }
 
