@@ -1,5 +1,6 @@
 package com.myboard.userservice.controller.model.display.response;
 
+import com.myboard.userservice.controller.model.common.MediaFile;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -13,5 +14,7 @@ public class DisplayGetDisplaysByIdResponse {
     private String displayName;
     private LocalDateTime createdDateAndTime;
     private String status;
-    private List<String> mediaFiles; // Add this field
+    private List<MediaFile> mediaFiles; // Existing field
+    private double latitude; // New field for latitude
+    private double longitude; // New field for longitude
 }

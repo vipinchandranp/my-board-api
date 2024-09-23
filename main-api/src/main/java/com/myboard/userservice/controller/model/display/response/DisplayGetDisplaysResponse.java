@@ -14,7 +14,13 @@ public class DisplayGetDisplaysResponse {
     private String displayId;
     private String displayName;
     private List<MediaFile> mediaFiles;
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdDateAndTime;
+
     private String status;
+
+    // Add geo-location fields
+    private double latitude;
+    private double longitude;
 }

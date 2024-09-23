@@ -7,6 +7,7 @@ import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.controller.model.common.TimeslotRequest;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.display.request.*;
+import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysByIdResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetTimeSlotsResponse;
 import com.myboard.userservice.entity.*;
@@ -117,6 +118,7 @@ public class DisplayService {
 
         flow.addInfo("Time slots updated successfully");
     }
+
     // Save a new display
     public void saveDisplay(MultipartFile file, String displayName) {
         if (file.isEmpty()) {
@@ -151,7 +153,7 @@ public class DisplayService {
 
             // Determine media type and create MediaFile object
             MediaType mediaType = utilService.determineMediaType(file);
-            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/display/"+ uniqueFileName, mediaType);
+            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/display/" + uniqueFileName, mediaType);
 
             // Add the media file to the display
             display.getMediaFiles().add(mediaFile);
@@ -192,7 +194,7 @@ public class DisplayService {
             Files.write(filePath, file.getBytes());
 
             MediaType mediaType = utilService.determineMediaType(file);
-            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/display/"+uniqueFileName, mediaType);
+            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/display/" + uniqueFileName, mediaType);
             board.getMediaFiles().add(mediaFile);
 
             boardRepository.save(board);
@@ -253,13 +255,16 @@ public class DisplayService {
     public List<DisplayGetDisplaysResponse> getDisplays(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Display> displayPage = displayRepository.findAll(pageable);
+
         List<DisplayGetDisplaysResponse> displays = displayPage.getContent().stream()
                 .map(display -> new DisplayGetDisplaysResponse(
                         display.getId(),
                         display.getName(),
                         display.getMediaFiles(),
                         display.getCreatedAt(),
-                        display.getStatus().toString()
+                        display.getStatus().toString(),
+                        display.getLocation() != null ? display.getLocation()[0] : 0.0, // latitude
+                        display.getLocation() != null ? display.getLocation()[1] : 0.0  // longitude
                 ))
                 .collect(Collectors.toList());
 
@@ -268,17 +273,33 @@ public class DisplayService {
         return displays;
     }
 
+
     // Get a display by ID, including media files
     public void getDisplayById(String displayId) {
         Display display = displayRepository.findById(displayId)
                 .orElseThrow(() -> new MBException("Display not found"));
 
-        flow.setData(new BoardGetBoardsByIdResponse(
+        flow.setData(new DisplayGetDisplaysByIdResponse(
                 display.getId(),
                 display.getName(),
                 display.getCreatedAt(),
                 display.getStatus().name(),
-                display.getMediaFiles() // Include mediaFiles here
+                display.getMediaFiles(), // Include mediaFiles here
+                display.getLocation() != null ? display.getLocation()[0] : 0.0, // Latitude
+                display.getLocation() != null ? display.getLocation()[1] : 0.0  // Longitude
         ));
+    }
+
+
+    public void geoTag(DisplayGeoTagRequest geoTagRequest) throws MBException {
+        // Validate the display
+        Display display = displayRepository.findById(geoTagRequest.getDisplayId()).orElse(null);
+        if (display == null) {
+            throw new MBException("Display not found");
+        }
+        // Update the display location
+        display.setLocation(new double[]{geoTagRequest.getLatitude(), geoTagRequest.getLongitude()});
+        displayRepository.save(display);
+        flow.addInfo("Geo-tagging successful");
     }
 }

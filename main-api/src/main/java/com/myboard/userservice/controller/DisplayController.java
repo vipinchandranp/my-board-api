@@ -65,16 +65,23 @@ public class DisplayController extends BaseController {
     }
 
     @PostMapping("/media/save")
-    public MainResponse<String> saveBoard(@RequestParam("file") MultipartFile file, @RequestParam String displayName) throws MBException, IOException {
+    public MainResponse<String> saveDisplay(@RequestParam("file") MultipartFile file, @RequestParam String displayName) throws MBException, IOException {
         displayService.saveDisplay(file, displayName);
         return buildResponse();
     }
 
     @PutMapping("/media/add/{boardId}")
-    public MainResponse<String> addMedia(@PathVariable String boardId, @RequestParam("file") MultipartFile file) throws MBException, IOException {
-        displayService.addMedia(boardId, file);
+    public MainResponse<String> addMedia(@PathVariable String displayId, @RequestParam("file") MultipartFile file) throws MBException, IOException {
+        displayService.addMedia(displayId, file);
         return buildResponse();
     }
+
+    @PutMapping("/geo-tag")
+    public MainResponse<String> geoTag(@RequestBody DisplayGeoTagRequest geoTagRequest) throws MBException, IOException {
+        displayService.geoTag(geoTagRequest);
+        return buildResponse();
+    }
+
 
     @DeleteMapping("/media/delete/{displayId}/{mediaName}")
     public MainResponse<String> deleteMedia(@PathVariable String displayId, @PathVariable String mediaName) throws MBException {
