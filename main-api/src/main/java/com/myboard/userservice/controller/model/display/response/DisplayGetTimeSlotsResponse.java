@@ -1,7 +1,7 @@
 package com.myboard.userservice.controller.model.display.response;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.myboard.userservice.entity.TimeSlot;
+import com.myboard.userservice.entity.Timeslot;
 import com.myboard.userservice.util.LocalDateSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,5 +17,5 @@ public class DisplayGetTimeSlotsResponse {
     private String displayId;
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate date;
-    private List<TimeSlot> timeSlots;
+    private List<Timeslot> timeSlots;
 }

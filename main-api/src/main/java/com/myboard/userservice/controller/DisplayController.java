@@ -5,6 +5,7 @@ import com.myboard.userservice.controller.model.board.request.DisplayApprovalReq
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.display.request.*;
+import com.myboard.userservice.controller.model.display.response.DisplayGetBoardIdsResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysResponse;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.DisplayService;
@@ -42,21 +43,29 @@ public class DisplayController extends BaseController {
         displayService.handleDisplayGet(displayGetRequest);
         return new MainResponse<>(flow);
     }
-
     @GetMapping("/get/time-slots")
-    public MainResponse getTimeSlots(@RequestParam String displayId, @RequestParam LocalDate date) throws MBException, IOException {
+    public MainResponse getTimeSlots(@RequestParam String displayId, @RequestParam String date) throws MBException, IOException {
+        // Parse the date string into a LocalDate object
+        LocalDate localDate = LocalDate.parse(date);
+
+        // Create request object
         DisplayGetTimeSlotsRequest displayGetTimeSlotRequest = new DisplayGetTimeSlotsRequest();
         displayGetTimeSlotRequest.setDisplayId(displayId);
-        displayGetTimeSlotRequest.setDate(date);
+        displayGetTimeSlotRequest.setDate(localDate);
+
+        // Handle the request
         displayService.handleDisplayGetTimeSlots(displayGetTimeSlotRequest);
+
         return new MainResponse<>(flow);
     }
 
+
     @PutMapping("/update/time-slots")
-    public MainResponse updateTimeSlots(@RequestBody DisplayUpdateTimeSlotsRequest displaySaveTimeSlots) throws MBException, IOException {
-        displayService.handleDisplayUpdateTimeSlots(displaySaveTimeSlots);
+    public MainResponse updateTimeSlots(@RequestBody DisplayUpdateTimeSlotsRequest displayUpdateTimeSlotsRequest) throws MBException, IOException {
+        displayService.handleDisplayUpdateTimeSlots(displayUpdateTimeSlotsRequest);
         return new MainResponse<>(flow);
     }
+
 
     @PutMapping("/approval")
     public MainResponse approval(@RequestBody DisplayApprovalRequest displayApprovalRequest) throws MBException {
@@ -90,22 +99,30 @@ public class DisplayController extends BaseController {
     }
 
     @DeleteMapping("/delete/{displayId}")
-    public MainResponse<String> deleteBoard(@PathVariable String displayId) throws MBException {
+    public MainResponse<String> deleteDisplay(@PathVariable String displayId) throws MBException {
         displayService.deleteDisplay(displayId);
         return buildResponse();
     }
 
     @GetMapping("/list")
-    public MainResponse<List<DisplayGetDisplaysResponse>> getBoards(@RequestParam(defaultValue = "0") int page,
+    public MainResponse<List<DisplayGetDisplaysResponse>> getDisplays(@RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "4") int size) throws MBException {
         displayService.getDisplays(page, size);
         return buildResponse();
     }
 
     @GetMapping("/{displayId}")
-    public MainResponse<DisplayGetDisplaysResponse> getBoardById(@PathVariable String displayId) throws MBException {
+    public MainResponse<DisplayGetDisplaysResponse> getDisplayById(@PathVariable String displayId) throws MBException {
         displayService.getDisplayById(displayId);
         return buildResponse();
     }
+
+    // Modify this method in DisplayController.java
+    @GetMapping("/boards/{displayId}")
+    public MainResponse<DisplayGetBoardIdsResponse> getBoardIdsByDisplayId(@PathVariable String displayId) throws MBException {
+        displayService.getBoardIdsByDisplayId(displayId);
+        return buildResponse();
+    }
+
 
 }

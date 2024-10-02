@@ -16,5 +16,5 @@ public interface BoardRepository extends MongoRepository<Board, String> {
     boolean existsByNameAndCreatedBy(String name, User createdBy);
     List<Board> findByCreatedBy(User user);
     Optional<Board> findByName(String boardName);
-    Page<Board> findAll(Pageable pageable);
+    Page<Board> findAll(Pageable pageable); // Keep the default pagination method
 }

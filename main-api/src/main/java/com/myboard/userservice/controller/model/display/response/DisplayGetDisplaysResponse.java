@@ -23,4 +23,7 @@ public class DisplayGetDisplaysResponse {
     // Add geo-location fields
     private double latitude;
     private double longitude;
+
+    // Add a list of board IDs associated with the display
+    private List<String> boardIds; // Changed to List<String> for board IDs
 }

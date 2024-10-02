@@ -1,5 +1,6 @@
 package com.myboard.userservice.controller;
 
+import com.myboard.userservice.controller.model.board.request.BoardGetBoardsRequest;
 import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.exception.MBException;
@@ -45,11 +46,11 @@ public class BoardController extends BaseController {
     }
 
     @GetMapping("/list")
-    public MainResponse<List<BoardGetBoardsResponse>> getBoards(@RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "4") int size) throws MBException {
-        boardService.getBoards(page, size);
+    public MainResponse<List<BoardGetBoardsResponse>> getBoards(BoardGetBoardsRequest request) throws MBException {
+        boardService.getBoards(request);
         return buildResponse();
     }
+
 
     @GetMapping("/{boardId}")
     public MainResponse<BoardGetBoardsResponse> getBoardById(@PathVariable String boardId) throws MBException {

@@ -1,12 +1,14 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.entity.TimeSlot;
+import com.myboard.userservice.entity.Timeslot;
 import com.myboard.userservice.properties.TimeslotProperties;
 import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,13 +18,20 @@ public class TimeslotService {
     @Autowired
     private TimeslotProperties timeslotProperties;
 
-    public List<TimeSlot> getDefaultTimeSlots() {
-        List<TimeSlot> timeSlots = new ArrayList<>();
+    // Assuming you have a way to get the current date
+    private LocalDateTime getCurrentDateTime() {
+        return LocalDateTime.now().withSecond(0).withNano(0); // Set seconds and nanoseconds to zero
+    }
+
+    public List<Timeslot> getDefaultTimeSlots() {
+        List<Timeslot> timeSlots = new ArrayList<>();
         int slotDuration = timeslotProperties.getDefaultDuration(); // Duration in minutes
 
         LocalTime startTime = LocalTime.of(0, 0);
         LocalTime endTime = LocalTime.of(23, 59);
         LocalTime endOfDay = LocalTime.of(23, 59);
+
+        LocalDateTime currentDateTime = getCurrentDateTime(); // Get current date with zeroed seconds
 
         while (!startTime.isAfter(endOfDay)) {
             // Calculate the end time for the current slot
@@ -31,10 +40,14 @@ public class TimeslotService {
                 slotEndTime = endOfDay;
             }
 
+            // Create LocalDateTime objects for the time slots
+            LocalDateTime startDateTime = currentDateTime.with(startTime); // Combine current date with startTime
+            LocalDateTime endDateTime = currentDateTime.with(slotEndTime); // Combine current date with slotEndTime
+
             // Create and add the time slot
-            TimeSlot timeSlot = TimeSlot.builder()
-                    .startTime(startTime.toString())
-                    .endTime(slotEndTime.toString())
+            Timeslot timeSlot = Timeslot.builder()
+                    .startTime(startDateTime) // Set LocalDateTime directly
+                    .endTime(endDateTime) // Set LocalDateTime directly
                     .status(StatusType.AVAILABLE)
                     .build();
 
@@ -51,5 +64,4 @@ public class TimeslotService {
 
         return timeSlots;
     }
-
 }

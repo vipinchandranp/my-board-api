@@ -1,7 +1,5 @@
 package com.myboard.userservice.service;
 
-import com.myboard.userservice.controller.model.board.response.BoardGetBoardsByIdResponse;
-import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
 import com.myboard.userservice.controller.model.board.request.DisplayApprovalRequest;
 import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.controller.model.common.TimeslotRequest;
@@ -15,6 +13,7 @@ import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.AvailabilityRepository;
 import com.myboard.userservice.repository.BoardRepository;
 import com.myboard.userservice.repository.DisplayRepository;
+import com.myboard.userservice.repository.TimeslotRepository;
 import com.myboard.userservice.types.MediaType;
 import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -64,6 +66,9 @@ public class DisplayService {
 
     @Autowired
     private UtilService utilService;
+
+    @Autowired
+    private TimeslotRepository timeslotRepository;
 
     // Handle display approval
     public void handleDisplayApproval(DisplayApprovalRequest displayApprovalRequest) {
@@ -99,25 +104,84 @@ public class DisplayService {
         }
 
         Availability availability = availabilityRepository.findByDisplayIdAndDate(display.getId(), displayGetTimeSlotsRequest.getDate());
-        List<TimeSlot> timeSlots = (availability != null) ? availability.getTimeSlots() : timeslotService.getDefaultTimeSlots();
+        List<Timeslot> timeSlots = (availability != null) ? availability.getTimeSlots() : timeslotService.getDefaultTimeSlots();
 
         flow.setData(new DisplayGetTimeSlotsResponse(display.getId(), displayGetTimeSlotsRequest.getDate(), timeSlots));
     }
 
     // Update time slots for a display
     public void handleDisplayUpdateTimeSlots(DisplayUpdateTimeSlotsRequest displayUpdateTimeSlotsRequest) throws MBException {
-        // Find display and board
-        Display display = displayRepository.findById(displayUpdateTimeSlotsRequest.getDisplayId()).orElse(null);
-        Board board = boardRepository.findById(displayUpdateTimeSlotsRequest.getBoardId()).orElse(null);
-        if (display == null || board == null) {
-            throw new MBException("Display or Board not found");
+        // Find display
+        Display display = displayRepository.findById(displayUpdateTimeSlotsRequest.getDisplayId()).orElseThrow(() -> new MBException("Display not found"));
+
+        // Process the list of board IDs and time slots
+        List<String> boardIds = displayUpdateTimeSlotsRequest.getBoardIds();
+        List<TimeslotRequest> timeslotRequests = displayUpdateTimeSlotsRequest.getTimeslots();
+
+        if (boardIds == null || boardIds.isEmpty()) {
+            throw new MBException("No boards provided");
         }
 
-        // Process time slots similarly to previous logic...
-        // (Method implementation remains unchanged for time slots)
+        if (timeslotRequests == null || timeslotRequests.isEmpty()) {
+            throw new MBException("No time slots provided");
+        }
+
+        // Clear existing boards and add new ones
+        display.getBoards().clear(); // Clear existing board references
+        List<Board> boardsToAdd = new ArrayList<>(); // To store new board references
+
+        // Iterate over each board ID to fetch and associate
+        for (String boardId : boardIds) {
+            Board board = boardRepository.findById(boardId).orElseThrow(() -> new MBException("Board with ID " + boardId + " not found"));
+            boardsToAdd.add(board); // Add the found board to the list
+        }
+
+        // Set the new list of boards to the display
+        display.setBoards(boardsToAdd);
+
+        // Save the updated display
+        displayRepository.save(display);
+
+        // Iterate over each board ID and save time slots
+        for (Board board : boardsToAdd) {
+            // Implement logic to update time slots for the current board
+            for (TimeslotRequest timeslot : timeslotRequests) {
+                // Here you would typically save the time slot for the board and display
+                saveTimeslotForBoard(display, board, timeslot, displayUpdateTimeSlotsRequest.getDate());
+            }
+        }
 
         flow.addInfo("Time slots updated successfully");
     }
+
+
+    private void saveTimeslotForBoard(Display display, Board board, TimeslotRequest timeslotRequest, LocalDate date) {
+
+        // Extract time components from the timeslot request
+        String startTimeStr = timeslotRequest.getStartTime(); // e.g., "03:00"
+        String endTimeStr = timeslotRequest.getEndTime(); // e.g., "03:59"
+
+        // Combine date with time
+        LocalDateTime startTime = LocalDateTime.parse(date + "T" + startTimeStr);
+        LocalDateTime endTime = LocalDateTime.parse(date + "T" + endTimeStr);
+
+        // Create a new Timeslot entity
+        Timeslot newTimeslot = Timeslot.builder().display(display) // Set the associated display
+                .board(board) // Set the associated board
+                .startTime(startTime) // Set the converted start time
+                .endTime(endTime) // Set the converted end time
+                .status(StatusType.WAITING_FOR_APPROVAL) // Set a default status or use as needed
+                .build();
+
+        // Save the timeslot using the TimeslotRepository
+        try {
+            timeslotRepository.save(newTimeslot); // Ensure you have this repository set up
+            flow.addInfo("Timeslot saved successfully for board: " + board.getName());
+        } catch (Exception e) {
+            throw new MBException("Failed to save timeslot for board: " + board.getName(), e);
+        }
+    }
+
 
     // Save a new display
     public void saveDisplay(MultipartFile file, String displayName) {
@@ -256,17 +320,16 @@ public class DisplayService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Display> displayPage = displayRepository.findAll(pageable);
 
-        List<DisplayGetDisplaysResponse> displays = displayPage.getContent().stream()
-                .map(display -> new DisplayGetDisplaysResponse(
-                        display.getId(),
-                        display.getName(),
-                        display.getMediaFiles(),
-                        display.getCreatedAt(),
-                        display.getStatus().toString(),
-                        display.getLocation() != null ? display.getLocation()[0] : 0.0, // latitude
-                        display.getLocation() != null ? display.getLocation()[1] : 0.0  // longitude
-                ))
-                .collect(Collectors.toList());
+        List<DisplayGetDisplaysResponse> displays = displayPage.getContent().stream().map(display -> {
+            // Extract board IDs from the associated boards
+            List<String> boardIds = display.getBoards().stream().map(Board::getId) // Assuming Board class has a getId() method
+                    .collect(Collectors.toList());
+
+            return new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), display.getCreatedAt(), display.getStatus().toString(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // latitude
+                    display.getLocation() != null ? display.getLocation()[1] : 0.0, // longitude
+                    boardIds // Include the list of board IDs associated with the display
+            );
+        }).collect(Collectors.toList());
 
         flow.setData(displays);
         flow.addInfo("Displays fetched successfully");
@@ -274,19 +337,18 @@ public class DisplayService {
     }
 
 
-    // Get a display by ID, including media files
+    // Get a display by ID, including media files and associated board IDs
     public void getDisplayById(String displayId) {
-        Display display = displayRepository.findById(displayId)
-                .orElseThrow(() -> new MBException("Display not found"));
+        Display display = displayRepository.findById(displayId).orElseThrow(() -> new MBException("Display not found"));
 
-        flow.setData(new DisplayGetDisplaysByIdResponse(
-                display.getId(),
-                display.getName(),
-                display.getCreatedAt(),
-                display.getStatus().name(),
-                display.getMediaFiles(), // Include mediaFiles here
-                display.getLocation() != null ? display.getLocation()[0] : 0.0, // Latitude
-                display.getLocation() != null ? display.getLocation()[1] : 0.0  // Longitude
+        // Extract board IDs from the associated boards
+        List<String> boardIds = display.getBoards().stream().map(Board::getId) // Assuming Board class has a getId() method
+                .collect(Collectors.toList());
+
+        flow.setData(new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), // Include mediaFiles here
+                display.getCreatedAt(), display.getStatus().name(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // Latitude
+                display.getLocation() != null ? display.getLocation()[1] : 0.0, // Longitude
+                boardIds // Include the list of board IDs associated with the display
         ));
     }
 
@@ -302,4 +364,27 @@ public class DisplayService {
         displayRepository.save(display);
         flow.addInfo("Geo-tagging successful");
     }
+
+    // DisplayService.java
+
+    // Modify this method in DisplayService.java
+    public List<String> getBoardIdsByDisplayId(String displayId) throws MBException {
+        // Validate the display
+        Display display = displayRepository.findById(displayId).orElse(null);
+        if (display == null) {
+            throw new MBException("Display not found");
+        }
+
+        // Retrieve all timeslots for the display
+        List<Timeslot> timeslots = timeslotRepository.findByDisplayId(displayId);
+
+        // Extract the board IDs from the timeslots
+        List<String> boardIds = timeslots.stream().map(timeslot -> timeslot.getBoard().getId()).distinct() // Ensure no duplicates
+                .collect(Collectors.toList());
+        flow.setData(boardIds);
+        flow.addInfo("Geo-tagging successful");
+        return boardIds;
+    }
+
+
 }

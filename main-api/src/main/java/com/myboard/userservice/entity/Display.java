@@ -19,7 +19,6 @@ import java.util.List;
 @Document(collection = "display")
 public class Display extends Base {
 
-
     private String name;
 
     @DBRef(lazy = true)
@@ -38,4 +37,8 @@ public class Display extends Base {
 
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private double[] location;
+
+    // New field to store associated boards
+    @DBRef(lazy = true) // Create a DB reference to Board entities
+    private List<Board> boards = new ArrayList<>();
 }

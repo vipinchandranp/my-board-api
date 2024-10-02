@@ -1,6 +1,7 @@
 package com.myboard.userservice.service;
 
 import com.myboard.userservice.controller.model.board.request.BoardApprovalRequest;
+import com.myboard.userservice.controller.model.board.request.BoardGetBoardsRequest;
 import com.myboard.userservice.controller.model.board.request.BoardGetRequest;
 import com.myboard.userservice.controller.model.board.response.BoardGetBoardsByIdResponse;
 import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
@@ -10,6 +11,8 @@ import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.BoardRepository;
+import com.myboard.userservice.repository.BoardSpecifications;
+import com.myboard.userservice.repository.CustomBoardRepository;
 import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.types.MediaType;
 import com.myboard.userservice.types.StatusType;
@@ -19,6 +22,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,6 +45,9 @@ public class BoardService {
 
     @Autowired
     private BoardRepository boardRepository;
+
+    @Autowired
+    private CustomBoardRepository customBoardRepository;
 
     @Autowired
     private DisplayRepository displayRepository;
@@ -92,7 +99,7 @@ public class BoardService {
 
             // Use UtilService to determine the media type
             MediaType mediaType = utilService.determineMediaType(file);
-            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/board/"+uniqueFileName, mediaType);
+            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/board/" + uniqueFileName, mediaType);
 
             Board board = (Board) boardRepository.findByName(boardName).orElseGet(() -> {
                 Board newBoard = new Board();
@@ -131,7 +138,7 @@ public class BoardService {
             Files.write(filePath, file.getBytes());
 
             MediaType mediaType = utilService.determineMediaType(file);
-            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/board/"+uniqueFileName, mediaType);
+            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/board/" + uniqueFileName, mediaType);
             board.getMediaFiles().add(mediaFile);
             boardRepository.save(board);
             flow.setData(Map.of("boardId", board.getId(), "fileName", uniqueFileName));
@@ -186,9 +193,25 @@ public class BoardService {
         }
     }
 
-    public List<BoardGetBoardsResponse> getBoards(int page, int size) throws MBException {
+    public List<BoardGetBoardsResponse> getBoards(BoardGetBoardsRequest request) throws MBException {
+        // Extract pagination parameters
+        int page = request.getPage();
+        int size = request.getSize();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Board> boardPage = boardRepository.findAll(pageable);
+
+        // Use the custom repository method to fetch filtered and paginated boards
+        Page<Board> boardPage = customBoardRepository.findBoardsWithFilters(
+                request.getSearchText(),
+                request.getStartDate(),
+                request.getEndDate(),
+                request.getStatus(),
+                request.getIsRecent(),
+                request.getIsFavorite(),
+                request.getBoardIds(),
+                pageable
+        );
+
+        // Convert the boards to response DTOs
         List<BoardGetBoardsResponse> boards = boardPage.getContent().stream()
                 .map(board -> new BoardGetBoardsResponse(
                         board.getId(),
@@ -199,10 +222,13 @@ public class BoardService {
                 ))
                 .collect(Collectors.toList());
 
+        // Set data and add info to the flow (for logging or tracking)
         flow.setData(boards);
         flow.addInfo("Boards fetched successfully");
+
         return boards;
     }
+
 
     public void getBoardById(String boardId) throws MBException {
         Board board = boardRepository.findById(boardId)

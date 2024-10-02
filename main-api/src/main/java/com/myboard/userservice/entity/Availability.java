@@ -1,6 +1,5 @@
 package com.myboard.userservice.entity;
 
-import com.myboard.userservice.types.StatusType;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -19,5 +18,5 @@ public class Availability {
     @DBRef
     private Board board;
     private LocalDate date;
-    private List<TimeSlot> timeSlots;
+    private List<Timeslot> timeSlots;
 }
