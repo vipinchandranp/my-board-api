@@ -24,6 +24,7 @@ public class User implements UserDetails {
     @Id
     private String id;
     private double[] location;
+    private String cityName;
     private String username;
     private String password;
     private String email;

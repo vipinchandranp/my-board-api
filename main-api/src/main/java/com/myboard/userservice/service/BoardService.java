@@ -8,12 +8,11 @@ import com.myboard.userservice.controller.model.board.response.BoardGetBoardsRes
 import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.entity.Board;
+import com.myboard.userservice.entity.Display;
+import com.myboard.userservice.entity.Timeslot;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MBException;
-import com.myboard.userservice.repository.BoardRepository;
-import com.myboard.userservice.repository.BoardSpecifications;
-import com.myboard.userservice.repository.CustomBoardRepository;
-import com.myboard.userservice.repository.DisplayRepository;
+import com.myboard.userservice.repository.*;
 import com.myboard.userservice.types.MediaType;
 import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +62,9 @@ public class BoardService {
 
     @Autowired
     private UtilService utilService;
+
+    @Autowired
+    private TimeslotRepository timeslotRepository;
 
     public void approveBoard(BoardApprovalRequest boardApprovalStatusRequest) {
         Board board = boardRepository.findById(boardApprovalStatusRequest.getBoardId()).orElse(null);
@@ -246,5 +248,21 @@ public class BoardService {
         ));
     }
 
+    public List<String> getDisplayIdsByBoardId(String boardId) throws MBException {
+        // Validate the display
+        Board board = boardRepository.findById(boardId).orElse(null);
+        if (board == null) {
+            throw new MBException("Board not found");
+        }
+
+        // Retrieve all timeslots for the display
+        List<Timeslot> timeslots = timeslotRepository.findByBoardId(boardId);
+
+        // Extract the board IDs from the timeslots
+        List<String> displayIds = timeslots.stream().map(timeslot -> timeslot.getDisplay().getId()).distinct()
+                .collect(Collectors.toList());
+        flow.setData(displayIds);
+        return displayIds;
+    }
 
 }

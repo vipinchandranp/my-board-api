@@ -12,8 +12,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DisplayRepository extends MongoRepository<Display, String> {
+
     boolean existsByName(String name);
+
     List<Display> findByCreatedBy(User user);
+
     Optional<Display> findByName(String dipsplayName);
+
     Page<Display> findAll(Pageable pageable);
+
 }

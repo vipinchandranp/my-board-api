@@ -2,10 +2,8 @@ package com.myboard.userservice.controller;
 
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.common.WorkFlow;
-import com.myboard.userservice.controller.model.user.UserLoginRequest;
-import com.myboard.userservice.controller.model.user.UserLoginResponse;
-import com.myboard.userservice.controller.model.user.UserSignupRequest;
-import com.myboard.userservice.controller.model.user.UserSignupResponse;
+import com.myboard.userservice.controller.model.user.*;
+import com.myboard.userservice.entity.Base;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +22,7 @@ import java.io.InputStream;
 @RestController
 @CrossOrigin
 @RequestMapping("/user")
-public class UserController {
+public class UserController extends BaseController {
 
     @Autowired
     private UserService userService;
@@ -86,4 +84,18 @@ public class UserController {
             return e.getMessage();
         }
     }
+
+    @PutMapping("/update")
+    public MainResponse<Void> updateUserDetails(@RequestBody UserDetailsRequest userDetailsRequest) throws MBException {
+        userService.updateUserDetails(userDetailsRequest);
+        return new MainResponse<>(flow);
+    }
+
+    @GetMapping("/location")
+    public MainResponse<String> getUserCity() throws MBException {
+        String userCityName = userService.getUserCity();
+        return buildResponse(userCityName);
+    }
+
+
 }

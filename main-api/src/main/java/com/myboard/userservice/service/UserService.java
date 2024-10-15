@@ -1,6 +1,7 @@
 package com.myboard.userservice.service;
 
 import com.myboard.userservice.controller.model.common.WorkFlow;
+import com.myboard.userservice.controller.model.user.UserDetailsRequest;
 import com.myboard.userservice.controller.model.user.UserLoginRequest;
 import com.myboard.userservice.controller.model.user.UserLoginResponse;
 import com.myboard.userservice.controller.model.user.UserSignupRequest;
@@ -26,6 +27,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -116,6 +118,7 @@ public class UserService {
             throw new MBException("Error while loading profile picture", e);
         }
     }
+
     public void saveLoggedInUserProfilePic(MultipartFile file) throws MBException, IOException {
         // Retrieve the logged-in user
         User user = mbUserDetailsService.getLoggedInUser();
@@ -146,6 +149,44 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void updateUserDetails(UserDetailsRequest userDetailsRequest) throws MBException {
+        // Retrieve the logged-in user
+        User user = mbUserDetailsService.getLoggedInUser();
 
+        // Update user's details with the values from UserDetailsRequest
+        Optional.ofNullable(userDetailsRequest.getUsername()).ifPresent(user::setUsername);
+        Optional.ofNullable(userDetailsRequest.getPassword())
+                .ifPresent(password -> user.setPassword(passwordEncoder.encode(password)));
+        Optional.ofNullable(userDetailsRequest.getEmail()).ifPresent(user::setEmail);
+        Optional.ofNullable(userDetailsRequest.getFirstName()).ifPresent(user::setFirstName);
+        Optional.ofNullable(userDetailsRequest.getLastName()).ifPresent(user::setLastName);
+        Optional.ofNullable(userDetailsRequest.getPhone()).ifPresent(user::setPhone);
+        Optional.ofNullable(userDetailsRequest.getAddress()).ifPresent(user::setAddress);
+        Optional.ofNullable(userDetailsRequest.getProfilePicName()).ifPresent(user::setProfilePicName);
+        Optional.ofNullable(userDetailsRequest.getCityName()).ifPresent(user::setCityName);
+
+        // Update location using latitude and longitude
+        if (userDetailsRequest.getLatitude() != null && userDetailsRequest.getLongitude() != null) {
+            user.setLocation(new double[]{userDetailsRequest.getLatitude(), userDetailsRequest.getLongitude()});
+        }
+
+        // Save the updated user details
+        userRepository.save(user);
+        flow.addInfo("Updated user details successfully");
+    }
+
+    public String getUserCity() throws MBException {
+        // Retrieve the logged-in user
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        // Check if the city name exists for the user
+        String cityName = user.getCityName();
+        if (cityName == null || cityName.isEmpty()) {
+            throw new MBException("User city information is not available");
+        }
+
+        // Return the city name
+        return cityName;
+    }
 
 }

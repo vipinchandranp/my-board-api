@@ -31,10 +31,6 @@ public class Display extends Base {
 
     private List<MediaFile> mediaFiles = new ArrayList<>();
 
-    // Reference to the Availability collection
-    @DBRef(lazy = true)
-    private List<Availability> availabilityList;
-
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private double[] location;
 

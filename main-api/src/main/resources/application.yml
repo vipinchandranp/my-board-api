@@ -34,6 +34,9 @@ spring:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: myboard
+  jackson:
+    time-zone: Asia/Kolkata
+
 
 logging.level.org.springframework.security: DEBUG
 spring.servlet.multipart.max-file-size: 50MB

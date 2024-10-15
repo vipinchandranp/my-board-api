@@ -17,4 +17,8 @@ public class MainResponse<T> {
         this.data = myBoardWorkFlow.getData();  // Safely cast data to the expected type
         this.messages.putAll(myBoardWorkFlow.getMessages());
     }
+
+    public MainResponse(T data) {
+        this.data = data;
+    }
 }

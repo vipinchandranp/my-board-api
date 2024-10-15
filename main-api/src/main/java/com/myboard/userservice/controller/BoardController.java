@@ -2,7 +2,9 @@ package com.myboard.userservice.controller;
 
 import com.myboard.userservice.controller.model.board.request.BoardGetBoardsRequest;
 import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
+import com.myboard.userservice.controller.model.board.response.BoardGetDisplayIdsResponse;
 import com.myboard.userservice.controller.model.common.MainResponse;
+import com.myboard.userservice.controller.model.display.response.DisplayGetBoardIdsResponse;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,10 +53,18 @@ public class BoardController extends BaseController {
         return buildResponse();
     }
 
-
     @GetMapping("/{boardId}")
     public MainResponse<BoardGetBoardsResponse> getBoardById(@PathVariable String boardId) throws MBException {
         boardService.getBoardById(boardId);
         return buildResponse();
     }
+
+    // Modify this method in DisplayController.java
+    @GetMapping("/display/{boardId}")
+    public MainResponse<BoardGetDisplayIdsResponse> getBoardIdsByDisplayId(@PathVariable String boardId) throws MBException {
+        boardService.getDisplayIdsByBoardId(boardId);
+        return buildResponse();
+    }
+
+
 }

@@ -1,7 +1,12 @@
 package com.myboard.userservice.service;
 
+import com.myboard.userservice.controller.model.timeslot.response.TimeslotStatusResponse;
+import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.entity.Timeslot;
+import com.myboard.userservice.entity.User;
 import com.myboard.userservice.properties.TimeslotProperties;
+import com.myboard.userservice.repository.DisplayRepository;
+import com.myboard.userservice.repository.TimeslotRepository;
 import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,12 +16,23 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TimeslotService {
 
     @Autowired
     private TimeslotProperties timeslotProperties;
+
+    @Autowired
+    private TimeslotRepository timeslotRepository;
+
+    @Autowired
+    private DisplayRepository displayRepository;
+
+    @Autowired
+    private MBUserDetailsService userDetailsService;
+
 
     // Assuming you have a way to get the current date
     private LocalDateTime getCurrentDateTime() {
@@ -63,5 +79,33 @@ public class TimeslotService {
         }
 
         return timeSlots;
+    }
+
+    public List<TimeslotStatusResponse> getTimeslotsByDisplayCreator() {
+        User user = userDetailsService.getLoggedInUser();
+
+        // Step 1: Find all displays created by the user
+        List<Display> displays = displayRepository.findByCreatedBy(user);
+
+        // Step 2: Find all timeslots associated with those displays
+        List<Timeslot> timeslots = timeslotRepository.findByDisplayIn(displays); // Use the correct method name
+
+        // Step 3: Convert Timeslot entities to TimeslotStatusResponse DTOs
+        return timeslots.stream()
+                .map(this::convertToTimeslotStatusResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Helper method to convert a Timeslot entity to TimeslotStatusResponse DTO
+    private TimeslotStatusResponse convertToTimeslotStatusResponse(Timeslot timeslot) {
+        return TimeslotStatusResponse.builder()
+                .date(timeslot.getStartTime())         // Assuming 'date' refers to the startTime
+                .timeslotId(timeslot.getId())
+                .boardId(timeslot.getBoard().getId())  // Get boardId
+                .boardName(timeslot.getBoard().getName())
+                .displayId(timeslot.getDisplay().getId()) // Get displayId
+                .displayName(timeslot.getDisplay().getName())
+                .status(timeslot.getStatus().name())   // Convert status enum to string
+                .build();
     }
 }
