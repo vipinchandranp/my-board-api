@@ -2,19 +2,12 @@ package com.myboard.userservice.controller;
 
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.timeslot.response.TimeslotStatusResponse;
-import com.myboard.userservice.entity.Timeslot;
-import com.myboard.userservice.entity.User;
-import com.myboard.userservice.service.MBUserDetailsService;
 import com.myboard.userservice.service.TimeslotService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -29,4 +22,14 @@ public class TimeslotController extends BaseController {
         List<TimeslotStatusResponse> status = timeslotService.getTimeslotsByDisplayCreator();
         return buildResponse(status);
     }
+
+    // New endpoint to update timeslot approval status
+    @PutMapping("/approval/update")
+    public MainResponse<Boolean> updateTimeslotApproval(
+            @RequestParam("timeslotId") String timeslotId,
+            @RequestParam("isApproved") boolean isApproved) {
+        boolean status = timeslotService.updateTimeslotApprovalStatus(timeslotId, isApproved);
+        return buildResponse(status);
+    }
+
 }

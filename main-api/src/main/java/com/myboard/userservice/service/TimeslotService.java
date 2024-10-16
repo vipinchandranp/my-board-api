@@ -108,4 +108,31 @@ public class TimeslotService {
                 .status(timeslot.getStatus().name())   // Convert status enum to string
                 .build();
     }
+
+    public boolean updateTimeslotApprovalStatus(String timeslotId, boolean isApproved) {
+        try {
+            // Fetch the timeslot by its ID
+            Timeslot timeslot = timeslotRepository.findById(timeslotId).orElse(null);
+
+            if (timeslot == null) {
+                // Timeslot not found
+                return false;
+            }
+
+            // Update the status based on approval
+            if (isApproved) {
+                timeslot.setStatus(StatusType.APPROVED); // Assuming APPROVED is a valid status
+            } else {
+                timeslot.setStatus(StatusType.REJECTED); // Assuming REJECTED is a valid status
+            }
+
+            // Save the updated timeslot
+            timeslotRepository.save(timeslot);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
