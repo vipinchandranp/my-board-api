@@ -10,6 +10,8 @@ server:
       enabled: false  # Disable the default error page
     include-message: always
 spring:
+  websocket:
+    enabled: true
   servlet:
     multipart:
       max-file-size: 50MB
@@ -42,16 +44,15 @@ logging.level.org.springframework.security: DEBUG
 spring.servlet.multipart.max-file-size: 50MB
 spring.servlet.multipart.e nabled: true
 spring.servlet.multipart.max-request-size: 50MB
-
+logging.level.root: TRACE
 myboard:
   user:
     profile-pic-path: C:/Users/vipin/development/myboard-uploaded-data/user/profile-pic
   display:
     path: C:/Users/vipin/development/myboard-uploaded-data/display
     timeSlotInterval: 15
+    searchRadius: 100
   board:
     path: C:/Users/vipin/development/myboard-uploaded-data/board
-  map:
-    radius: 100
   timeslots:
     default-duration: 60  # Duration in minutes

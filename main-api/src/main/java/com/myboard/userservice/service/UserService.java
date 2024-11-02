@@ -1,10 +1,7 @@
 package com.myboard.userservice.service;
 
 import com.myboard.userservice.controller.model.common.WorkFlow;
-import com.myboard.userservice.controller.model.user.UserDetailsRequest;
-import com.myboard.userservice.controller.model.user.UserLoginRequest;
-import com.myboard.userservice.controller.model.user.UserLoginResponse;
-import com.myboard.userservice.controller.model.user.UserSignupRequest;
+import com.myboard.userservice.controller.model.user.*;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.UserRepository;
@@ -189,4 +186,23 @@ public class UserService {
         return cityName;
     }
 
+    public UserLocationResponse getUserLocation() throws MBException {
+        // Retrieve the logged-in user
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        // Get the location from the user object
+        double[] location = user.getLocation();
+
+        // Check if the location is set
+        if (location == null || location.length < 2) {
+            throw new MBException("User location is not available");
+        }
+
+        // Create a response object with latitude and longitude
+        UserLocationResponse locationResponse = new UserLocationResponse();
+        locationResponse.setLatitude(location[0]);
+        locationResponse.setLongitude(location[1]);
+
+        return locationResponse;
+    }
 }

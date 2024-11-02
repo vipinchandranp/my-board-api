@@ -1,12 +1,12 @@
 package com.myboard.userservice.controller;
 
-import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
 import com.myboard.userservice.controller.model.board.request.DisplayApprovalRequest;
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.display.request.*;
 import com.myboard.userservice.controller.model.display.response.DisplayGetBoardIdsResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysResponse;
+import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysIdNameLocationResponse;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.DisplayService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +43,7 @@ public class DisplayController extends BaseController {
         displayService.handleDisplayGet(displayGetRequest);
         return new MainResponse<>(flow);
     }
+
     @GetMapping("/get/time-slots")
     public MainResponse getTimeSlots(@RequestParam String displayId, @RequestParam String date) throws MBException, IOException {
         // Parse the date string into a LocalDate object
@@ -106,7 +107,7 @@ public class DisplayController extends BaseController {
 
     @GetMapping("/list")
     public MainResponse<List<DisplayGetDisplaysResponse>> getDisplays(@RequestParam(defaultValue = "0") int page,
-                                                      @RequestParam(defaultValue = "4") int size) throws MBException {
+                                                                      @RequestParam(defaultValue = "4") int size) throws MBException {
         displayService.getDisplays(page, size);
         return buildResponse();
     }
@@ -124,5 +125,16 @@ public class DisplayController extends BaseController {
         return buildResponse();
     }
 
+    @GetMapping("/nearby")
+    public MainResponse<List<DisplayGetDisplaysIdNameLocationResponse>> getNearbyDisplays() throws MBException {
+        List<DisplayGetDisplaysIdNameLocationResponse> nearbyDisplays = displayService.getNearbyDisplays();
+        return new MainResponse<>(nearbyDisplays);
+    }
+
+    @GetMapping("/all")
+    public MainResponse<List<DisplayGetDisplaysIdNameLocationResponse>> getAllDisplays() throws MBException {
+        List<DisplayGetDisplaysIdNameLocationResponse> getAllDisplays = displayService.getAllDisplays();
+        return new MainResponse<>(getAllDisplays);
+    }
 
 }

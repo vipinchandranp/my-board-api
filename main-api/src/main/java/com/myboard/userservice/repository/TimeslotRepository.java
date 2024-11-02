@@ -34,5 +34,9 @@ public interface TimeslotRepository extends MongoRepository<Timeslot, String> {
     // New method to find all timeslots associated with a list of Display entities
     List<Timeslot> findByDisplayIn(List<Display> displays);
 
+    // Find timeslots for a specific display within a date range
     List<Timeslot> findByDisplayIdAndStartTimeBetween(String displayId, LocalDateTime startTime, LocalDateTime endTime);
+
+    // New method to find all timeslots starting between two LocalDateTime values
+    List<Timeslot> findByStartTimeBetween(LocalDateTime startDate, LocalDateTime endDate);
 }

@@ -5,6 +5,7 @@ import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.controller.model.common.TimeslotRequest;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.display.request.*;
+import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysIdNameLocationResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetTimeSlotsResponse;
 import com.myboard.userservice.entity.*;
@@ -34,6 +35,11 @@ import java.util.stream.Collectors;
 
 @Service
 public class DisplayService {
+
+
+    @Value("${myboard.display.searchRadius}")
+    private double searchRadius;
+
 
     // Autowired services
     @Autowired
@@ -385,5 +391,83 @@ public class DisplayService {
         return boardIds;
     }
 
+    public List<DisplayGetDisplaysIdNameLocationResponse> getNearbyDisplays() throws MBException {
+        // Get the logged-in user's location
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
+        double[] userLocation = loggedInUser.getLocation();
+        if (userLocation == null || userLocation.length != 2) {
+            throw new MBException("User location not set");
+        }
+
+        // Get all displays from the repository
+        List<Display> allDisplays = displayRepository.findAll();
+
+        // Filter displays within the search radius
+        List<Display> nearbyDisplays = allDisplays.stream()
+                .filter(display -> display.getLocation() != null && display.getLocation().length == 2)
+                .filter(display -> isWithinRadius(userLocation, display.getLocation(), searchRadius))
+                .collect(Collectors.toList());
+
+        // Convert the nearby displays to the new response format
+        List<DisplayGetDisplaysIdNameLocationResponse> response = nearbyDisplays.stream()
+                .map(display -> new DisplayGetDisplaysIdNameLocationResponse(
+                        display.getId(),
+                        display.getName(),
+                        display.getLocation()[0], // Latitude
+                        display.getLocation()[1]  // Longitude
+                ))
+                .collect(Collectors.toList());
+
+        // Add the data to the workflow
+        flow.setData(response);
+        flow.addInfo("Nearby displays fetched successfully");
+        return response;
+    }
+
+    // Method to check if a display is within the search radius using Haversine formula
+    private boolean isWithinRadius(double[] userLocation, double[] displayLocation, double radiusInKm) {
+        double earthRadius = 6371.0; // Radius of the earth in kilometers
+
+        double latDiff = Math.toRadians(displayLocation[0] - userLocation[0]);
+        double lonDiff = Math.toRadians(displayLocation[1] - userLocation[1]);
+
+        double a = Math.sin(latDiff / 2) * Math.sin(latDiff / 2) +
+                Math.cos(Math.toRadians(userLocation[0])) * Math.cos(Math.toRadians(displayLocation[0])) *
+                        Math.sin(lonDiff / 2) * Math.sin(lonDiff / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        double distance = earthRadius * c; // Distance in kilometers
+
+        return distance <= radiusInKm;
+    }
+
+
+    public List<DisplayGetDisplaysIdNameLocationResponse> getAllDisplays() throws MBException {
+        // Get the logged-in user's location
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
+        double[] userLocation = loggedInUser.getLocation();
+        if (userLocation == null || userLocation.length != 2) {
+            throw new MBException("User location not set");
+        }
+
+        // Get all displays from the repository
+        List<Display> allDisplays = displayRepository.findAll();
+
+        // Convert the nearby displays to the new response format
+        List<DisplayGetDisplaysIdNameLocationResponse> response = allDisplays.stream()
+                .map(display -> new DisplayGetDisplaysIdNameLocationResponse(
+                        display.getId(),
+                        display.getName(),
+                        display.getLocation()[0], // Latitude
+                        display.getLocation()[1]  // Longitude
+                ))
+                .collect(Collectors.toList());
+
+        // Add the data to the workflow
+        flow.setData(response);
+        flow.addInfo("Nearby displays fetched successfully");
+        return response;
+    }
 
 }

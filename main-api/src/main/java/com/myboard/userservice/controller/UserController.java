@@ -36,6 +36,7 @@ public class UserController extends BaseController {
         userService.handleUserSignup(signupRequest);
         return new MainResponse<>(flow);
     }
+
     @PostMapping("/login")
     public MainResponse<UserLoginResponse> login(@RequestBody UserLoginRequest loginRequest) throws MBException {
         userService.handleUserLogin(loginRequest);
@@ -75,6 +76,7 @@ public class UserController extends BaseController {
             return byteArrayOutputStream.toByteArray();
         }
     }
+
     @PostMapping("/profile-pic")
     public String saveLoggedInProfilePic(@RequestParam("file") MultipartFile file) {
         try {
@@ -91,10 +93,16 @@ public class UserController extends BaseController {
         return new MainResponse<>(flow);
     }
 
-    @GetMapping("/location")
+    @GetMapping("/user-city")
     public MainResponse<String> getUserCity() throws MBException {
         String userCityName = userService.getUserCity();
         return buildResponse(userCityName);
+    }
+
+    @GetMapping("/user-location")
+    public MainResponse<UserLocationResponse> getUserLocation() throws MBException {
+        UserLocationResponse userLocation = userService.getUserLocation();
+        return buildResponse(userLocation);
     }
 
 

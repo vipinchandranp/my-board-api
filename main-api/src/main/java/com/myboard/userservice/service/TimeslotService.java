@@ -1,5 +1,6 @@
 package com.myboard.userservice.service;
 
+import com.myboard.userservice.controller.model.timeslot.request.TimeslotStatusRequest;
 import com.myboard.userservice.controller.model.timeslot.response.TimeslotStatusResponse;
 import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.entity.Timeslot;
@@ -11,6 +12,7 @@ import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -81,6 +83,40 @@ public class TimeslotService {
         return timeSlots;
     }
 
+    public List<TimeslotStatusResponse> getTimeslotsByFilter(TimeslotStatusRequest request) {
+        // Ensure date is not null and create LocalDate range
+        LocalDate date = LocalDate.from(request.getDate());
+        LocalDate startDate = date; // Start of the day
+        LocalDate endDate = date.plusDays(1); // End of the day (exclusive)
+
+        // Fetch displays created by the logged-in user
+        List<Display> userDisplays = userDetailsService.getDisplaysOfLoggedInUser();
+
+        // Fetch timeslots for the specific date associated with those displays
+        List<Timeslot> timeslots = timeslotRepository.findByDisplayIn(userDisplays);
+
+        // Filter timeslots based on the date range
+        List<Timeslot> filteredTimeslots = timeslots.stream()
+                .filter(timeslot ->
+                        !timeslot.getStartTime().toLocalDate().isBefore(startDate) &&
+                                !timeslot.getStartTime().toLocalDate().isAfter(endDate)
+                )
+                .filter(timeslot ->
+                        (request.getDisplayId() == null || timeslot.getDisplay().getId().equals(request.getDisplayId())) && // Filter by displayId
+                                (request.getDisplayName() == null || timeslot.getDisplay().getName().equalsIgnoreCase(request.getDisplayName())) && // Filter by displayName
+                                (request.getBoardId() == null || timeslot.getBoard().getId().equals(request.getBoardId())) && // Filter by boardId
+                                (request.getBoardName() == null || timeslot.getBoard().getName().equalsIgnoreCase(request.getBoardName())) && // Filter by boardName
+                                (request.getStatus() == null || timeslot.getStatus().equals(request.getStatus())) // Filter by status
+                )
+                .collect(Collectors.toList());
+    
+        // Convert filtered timeslots to response DTOs
+        return filteredTimeslots.stream()
+                .map(this::convertToTimeslotStatusResponse)
+                .collect(Collectors.toList());
+    }
+
+
     public List<TimeslotStatusResponse> getTimeslotsByDisplayCreator() {
         User user = userDetailsService.getLoggedInUser();
 
@@ -134,5 +170,24 @@ public class TimeslotService {
             return false;
         }
     }
+
+    public List<LocalDate> getAvailableDatesForUserDisplays() {
+        User user = userDetailsService.getLoggedInUser();
+
+        // Step 1: Find all displays created by the user
+        List<Display> displays = displayRepository.findByCreatedBy(user);
+
+        // Step 2: Find all timeslots associated with those displays
+        List<Timeslot> timeslots = timeslotRepository.findByDisplayIn(displays);
+
+        // Step 3: Extract unique dates from the start time of the timeslots
+        List<LocalDate> availableDates = timeslots.stream()
+                .map(timeslot -> timeslot.getStartTime().toLocalDate()) // Get LocalDate from startTime
+                .distinct() // Get unique dates
+                .collect(Collectors.toList());
+
+        return availableDates;
+    }
+
 
 }
