@@ -1,21 +1,28 @@
 package com.myboard.userservice.controller;
 
+import com.myboard.userservice.controller.model.board.request.BoardGetBoardsRequest;
 import com.myboard.userservice.controller.model.board.request.DisplayApprovalRequest;
+import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.display.request.*;
 import com.myboard.userservice.controller.model.display.response.DisplayGetBoardIdsResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysIdNameLocationResponse;
+import com.myboard.userservice.entity.Board;
+import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.DisplayService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin
@@ -105,12 +112,30 @@ public class DisplayController extends BaseController {
         return buildResponse();
     }
 
+
     @GetMapping("/list")
-    public MainResponse<List<DisplayGetDisplaysResponse>> getDisplays(@RequestParam(defaultValue = "0") int page,
-                                                                      @RequestParam(defaultValue = "4") int size) throws MBException {
-        displayService.getDisplays(page, size);
-        return buildResponse();
+    public MainResponse<List<DisplayGetDisplaysResponse>> getDisplays(DisplayGetDisplaysRequest request) throws MBException {
+        // Get the paginated and filtered list of displays from the service
+        Page<Display> displaysPage = displayService.getFilteredDisplays(request, PageRequest.of(request.getPage(), request.getSize()));
+
+        // Map the Page<Display> to the response model
+        List<DisplayGetDisplaysResponse> displayResponses = displaysPage.getContent().stream()
+                .map(display -> new DisplayGetDisplaysResponse(
+                        display.getId(), // Assuming getId() gives the display ID
+                        display.getName(),
+                        display.getMediaFiles(),
+                        display.getCreatedTime(),
+                        display.getStatus().name(), // Convert enum to string
+                        display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[0] : 0.0, // Latitude
+                        display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[1] : 0.0, // Longitude
+                        display.getBoards().stream().map(board -> board.getId()).collect(Collectors.toList()) // Collect board IDs
+                )) // Mapping Display entity to DisplayGetDisplaysResponse
+                .collect(Collectors.toList());
+
+        // Build and return the response with pagination data
+        return buildResponse(displayResponses, displaysPage.getTotalElements(), displaysPage.getTotalPages(), displaysPage.getNumber());
     }
+
 
     @GetMapping("/{displayId}")
     public MainResponse<DisplayGetDisplaysResponse> getDisplayById(@PathVariable String displayId) throws MBException {

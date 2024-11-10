@@ -44,7 +44,7 @@ logging.level.org.springframework.security: DEBUG
 spring.servlet.multipart.max-file-size: 50MB
 spring.servlet.multipart.e nabled: true
 spring.servlet.multipart.max-request-size: 50MB
-logging.level.root: TRACE
+logging.level.root: INFO
 myboard:
   user:
     profile-pic-path: C:/Users/vipin/development/myboard-uploaded-data/user/profile-pic

@@ -17,6 +17,10 @@ import java.util.Map;
 public class WorkFlow<T> {
 
     private T data;
+    private long totalElements;
+    private int totalPages;
+    private int currentPage;
+
     private Map<MessageType, List<String>> messages = new HashMap<>();
 
     public WorkFlow() {

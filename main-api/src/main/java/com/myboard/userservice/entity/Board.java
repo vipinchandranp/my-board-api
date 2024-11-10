@@ -8,7 +8,6 @@ import com.myboard.userservice.types.StatusType;
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Builder

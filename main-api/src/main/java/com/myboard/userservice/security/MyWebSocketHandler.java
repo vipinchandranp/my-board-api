@@ -6,6 +6,9 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -13,48 +16,25 @@ import java.util.concurrent.TimeUnit;
 public class MyWebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(MyWebSocketHandler.class);
+    private static final Set<WebSocketSession> sessions = Collections.synchronizedSet(new HashSet<>());
     private ScheduledExecutorService executorService;
-    private int counter = 0; // Initialize counter
+    private int counter = 0;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         logger.info("New WebSocket connection established: " + session.getId());
+        sessions.add(session); // Add the session to the set
         session.sendMessage(new TextMessage("Welcome to the WebSocket server!"));
-
-        // Start sending counter messages every 3 seconds
-        startCounter(session);
-    }
-
-    private void startCounter(WebSocketSession session) {
-        executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(() -> {
-            try {
-                counter++; // Increment the counter
-                session.sendMessage(new TextMessage("Counter: " + counter));
-            } catch (Exception e) {
-                logger.error("Error sending message to client: " + e.getMessage());
-                stopCounter(); // Stop if there's an error
-            }
-        }, 0, 3, TimeUnit.SECONDS); // Start immediately, repeat every 3 seconds
-    }
-
-    @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        logger.info("Received message: " + message.getPayload());
-
-        // Echo the received message back to the client
-        session.sendMessage(new TextMessage("Echo: " + message.getPayload()));
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) throws Exception {
         logger.info("WebSocket connection closed: " + session.getId());
-        stopCounter(); // Stop the counter when the connection is closed
+        sessions.remove(session); // Remove the session from the set
     }
 
-    private void stopCounter() {
-        if (executorService != null && !executorService.isShutdown()) {
-            executorService.shutdown(); // Shutdown the executor service
-        }
+    // Public static method to get active sessions
+    public static Set<WebSocketSession> getSessions() {
+        return sessions; // Return the set of active sessions
     }
 }

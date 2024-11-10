@@ -9,6 +9,21 @@ public abstract class BaseController {
     @Autowired
     private WorkFlow flow;
 
+    protected <T> MainResponse<T> buildResponse(
+            T data,
+            long totalElements,
+            int totalPages,
+            int currentPage) {
+
+        flow.setData(data);  // Set data to the flow
+        flow.setTotalElements(totalElements);  // Set total elements
+        flow.setTotalPages(totalPages);  // Set total pages
+        flow.setCurrentPage(currentPage);  // Set current page number
+
+        return new MainResponse<>(flow);  // Return a new MainResponse with flow
+    }
+
+
     // Method to build a response with data
     protected <T> MainResponse<T> buildResponse(T data) {
         flow.setData(data);

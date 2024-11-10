@@ -11,7 +11,7 @@ import com.myboard.userservice.entity.Display;
 import java.util.List;
 import java.util.Optional;
 
-public interface DisplayRepository extends MongoRepository<Display, String> {
+public interface DisplayRepository extends MongoRepository<Display, String>, CommonFilteredMongoRepository<Display>  {
 
     boolean existsByName(String name);
 

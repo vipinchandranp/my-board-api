@@ -4,16 +4,17 @@ import com.myboard.userservice.controller.model.board.request.BoardApprovalReque
 import com.myboard.userservice.controller.model.board.request.BoardGetBoardsRequest;
 import com.myboard.userservice.controller.model.board.request.BoardGetRequest;
 import com.myboard.userservice.controller.model.board.response.BoardGetBoardsByIdResponse;
-import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
+import com.myboard.userservice.controller.model.common.AbstractFilterRequest;
 import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.entity.Board;
-import com.myboard.userservice.entity.Display;
+import com.myboard.userservice.entity.Notification;
 import com.myboard.userservice.entity.Timeslot;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.*;
 import com.myboard.userservice.types.MediaType;
+import com.myboard.userservice.types.NotificationType;
 import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +22,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,9 +47,6 @@ public class BoardService {
     private BoardRepository boardRepository;
 
     @Autowired
-    private CustomBoardRepository customBoardRepository;
-
-    @Autowired
     private DisplayRepository displayRepository;
 
     @Autowired
@@ -65,6 +63,16 @@ public class BoardService {
 
     @Autowired
     private TimeslotRepository timeslotRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private MongoRepository<Board, String> boardRepositoryWithFilter;
+
+    @Autowired
+    private CommonFilteredMongoRepository<Board> filteredMongoRepository;
+
 
     public void approveBoard(BoardApprovalRequest boardApprovalStatusRequest) {
         Board board = boardRepository.findById(boardApprovalStatusRequest.getBoardId()).orElse(null);
@@ -107,14 +115,14 @@ public class BoardService {
                 Board newBoard = new Board();
                 newBoard.setName(boardName);
                 newBoard.setCreatedBy(user);
-                newBoard.setCreatedAt(LocalDateTime.now());
+                newBoard.setCreatedTime(LocalDateTime.now());
                 newBoard.setMediaFiles(new ArrayList<>());
                 return newBoard;
             });
 
             board.getMediaFiles().add(mediaFile);
             board.setModifiedBy(user);
-            board.setLastModifiedAt(LocalDateTime.now());
+            board.setLastModifiedTime(LocalDateTime.now());
             boardRepository.save(board);
             flow.setData(Map.of("boardId", board.getId(), "fileName", uniqueFileName));
 
@@ -195,42 +203,15 @@ public class BoardService {
         }
     }
 
-    public List<BoardGetBoardsResponse> getBoards(BoardGetBoardsRequest request) throws MBException {
-        // Extract pagination parameters
-        int page = request.getPage();
-        int size = request.getSize();
-        Pageable pageable = PageRequest.of(page, size);
 
-        // Use the custom repository method to fetch filtered and paginated boards
-        Page<Board> boardPage = customBoardRepository.findBoardsWithFilters(
-                request.getSearchText(),
-                request.getStartDate(),
-                request.getEndDate(),
-                request.getStatus(),
-                request.getIsRecent(),
-                request.getIsFavorite(),
-                request.getBoardIds(),
-                pageable
-        );
-
-        // Convert the boards to response DTOs
-        List<BoardGetBoardsResponse> boards = boardPage.getContent().stream()
-                .map(board -> new BoardGetBoardsResponse(
-                        board.getId(),
-                        board.getName(),
-                        board.getMediaFiles(),
-                        board.getCreatedAt(),
-                        board.getStatus().toString()
-                ))
-                .collect(Collectors.toList());
-
-        // Set data and add info to the flow (for logging or tracking)
-        flow.setData(boards);
-        flow.addInfo("Boards fetched successfully");
-
-        return boards;
+    public Page<Board> getFilteredBoards(AbstractFilterRequest filterRequest, Pageable pageable) {
+        // Pass the entity class directly
+        return boardRepository.findAllByFilter(filterRequest, Board.class, pageable);
     }
 
+    private Pageable createPageable(int page, int size) {
+        return PageRequest.of(page, size);
+    }
 
     public void getBoardById(String boardId) throws MBException {
         Board board = boardRepository.findById(boardId)
@@ -242,7 +223,7 @@ public class BoardService {
         flow.setData(new BoardGetBoardsByIdResponse(
                 board.getId(),
                 board.getName(),
-                board.getCreatedAt(),
+                board.getCreatedTime(),
                 board.getStatus().name(),
                 mediaFiles // Pass the list of MediaFile objects
         ));
@@ -263,6 +244,26 @@ public class BoardService {
                 .collect(Collectors.toList());
         flow.setData(displayIds);
         return displayIds;
+    }
+
+    public void updateBoardStatus(String boardId, StatusType newStatus) throws MBException {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new MBException("Board not found"));
+
+        StatusType oldStatus = board.getStatus();
+        board.setStatus(newStatus);
+        boardRepository.save(board);
+
+        // Create and save a notification after status update
+        createNotification(oldStatus, newStatus, boardId);
+
+        flow.addInfo("Board status updated successfully");
+    }
+
+    private void createNotification(StatusType oldStatus, StatusType newStatus, String boardId) {
+        Notification notification = new Notification();
+        notification.setNotificationType(NotificationType.BOARD_STATUS_CHANGED);
+        notificationRepository.save(notification);
     }
 
 }

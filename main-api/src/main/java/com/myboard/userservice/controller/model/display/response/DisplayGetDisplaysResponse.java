@@ -4,12 +4,13 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.myboard.userservice.controller.model.common.MediaFile;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
+@NoArgsConstructor // Add no-args constructor if required
 public class DisplayGetDisplaysResponse {
     private String displayId;
     private String displayName;
@@ -26,4 +27,24 @@ public class DisplayGetDisplaysResponse {
 
     // Add a list of board IDs associated with the display
     private List<String> boardIds; // Changed to List<String> for board IDs
+
+    // Explicit constructor (if you want to manually define it)
+    public DisplayGetDisplaysResponse(
+            String displayId,
+            String displayName,
+            List<MediaFile> mediaFiles,
+            LocalDateTime createdDateAndTime,
+            String status,
+            double latitude,
+            double longitude,
+            List<String> boardIds) {
+        this.displayId = displayId;
+        this.displayName = displayName;
+        this.mediaFiles = mediaFiles;
+        this.createdDateAndTime = createdDateAndTime;
+        this.status = status;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.boardIds = boardIds;
+    }
 }

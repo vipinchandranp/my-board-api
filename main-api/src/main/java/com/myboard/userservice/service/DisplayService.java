@@ -1,6 +1,7 @@
 package com.myboard.userservice.service;
 
 import com.myboard.userservice.controller.model.board.request.DisplayApprovalRequest;
+import com.myboard.userservice.controller.model.common.AbstractFilterRequest;
 import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.controller.model.common.TimeslotRequest;
 import com.myboard.userservice.controller.model.common.WorkFlow;
@@ -188,7 +189,10 @@ public class DisplayService {
         }
     }
 
-
+    public Page<Display> getFilteredDisplays(AbstractFilterRequest filterRequest, Pageable pageable) {
+        // Pass the entity class directly
+        return displayRepository.findAllByFilter(filterRequest, Display.class, pageable);
+    }
     // Save a new display
     public void saveDisplay(MultipartFile file, String displayName) {
         if (file.isEmpty()) {
@@ -216,7 +220,7 @@ public class DisplayService {
                 Display newDisplay = new Display();
                 newDisplay.setName(displayName);
                 newDisplay.setCreatedBy(user);
-                newDisplay.setCreatedAt(LocalDateTime.now());
+                newDisplay.setCreatedTime(LocalDateTime.now());
                 newDisplay.setMediaFiles(new ArrayList<>()); // Initialize mediaFiles list
                 return newDisplay;
             });
@@ -230,7 +234,7 @@ public class DisplayService {
 
             // Update modified info
             display.setModifiedBy(user);
-            display.setLastModifiedAt(LocalDateTime.now());
+            display.setLastModifiedTime(LocalDateTime.now());
 
             // Save the display to the database
             displayRepository.save(display);
@@ -331,7 +335,7 @@ public class DisplayService {
             List<String> boardIds = display.getBoards().stream().map(Board::getId) // Assuming Board class has a getId() method
                     .collect(Collectors.toList());
 
-            return new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), display.getCreatedAt(), display.getStatus().toString(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // latitude
+            return new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), display.getCreatedTime(), display.getStatus().toString(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // latitude
                     display.getLocation() != null ? display.getLocation()[1] : 0.0, // longitude
                     boardIds // Include the list of board IDs associated with the display
             );
@@ -352,7 +356,7 @@ public class DisplayService {
                 .collect(Collectors.toList());
 
         flow.setData(new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), // Include mediaFiles here
-                display.getCreatedAt(), display.getStatus().name(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // Latitude
+                display.getCreatedTime(), display.getStatus().name(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // Latitude
                 display.getLocation() != null ? display.getLocation()[1] : 0.0, // Longitude
                 boardIds // Include the list of board IDs associated with the display
         ));

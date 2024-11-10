@@ -19,13 +19,15 @@ public class Base {
     @Id
     private String id;
 
+    private String searchName;
+
     private boolean active = true;
 
     @CreatedDate
-    private LocalDateTime createdAt;
+    private LocalDateTime createdTime;
 
     @LastModifiedDate
-    private LocalDateTime lastModifiedAt;
+    private LocalDateTime lastModifiedTime;
 
     @DBRef
     @CreatedBy

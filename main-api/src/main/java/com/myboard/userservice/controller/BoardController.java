@@ -5,14 +5,19 @@ import com.myboard.userservice.controller.model.board.response.BoardGetBoardsRes
 import com.myboard.userservice.controller.model.board.response.BoardGetDisplayIdsResponse;
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetBoardIdsResponse;
+import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.service.BoardService;
+import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin
@@ -21,7 +26,6 @@ public class BoardController extends BaseController {
 
     @Autowired
     private BoardService boardService;
-
 
     @PostMapping("/media/save")
     public MainResponse<String> saveBoard(@RequestParam("file") MultipartFile file, @RequestParam String boardName) throws MBException, IOException {
@@ -49,8 +53,16 @@ public class BoardController extends BaseController {
 
     @GetMapping("/list")
     public MainResponse<List<BoardGetBoardsResponse>> getBoards(BoardGetBoardsRequest request) throws MBException {
-        boardService.getBoards(request);
-        return buildResponse();
+        // Get the paginated and filtered list of boards from the service
+        Page<Board> boardsPage = boardService.getFilteredBoards(request, PageRequest.of(request.getPage(), request.getSize()));
+
+        // Map the Page<Board> to the response model
+        List<BoardGetBoardsResponse> boardResponses = boardsPage.getContent().stream()
+                .map(board -> new BoardGetBoardsResponse(board)) // Assuming BoardGetBoardsResponse has a constructor that takes a Board entity
+                .collect(Collectors.toList());
+
+        // Build and return the response with pagination data
+        return buildResponse(boardResponses, boardsPage.getTotalElements(), boardsPage.getTotalPages(), boardsPage.getNumber());
     }
 
     @GetMapping("/{boardId}")
@@ -59,12 +71,16 @@ public class BoardController extends BaseController {
         return buildResponse();
     }
 
-    // Modify this method in DisplayController.java
     @GetMapping("/display/{boardId}")
     public MainResponse<BoardGetDisplayIdsResponse> getBoardIdsByDisplayId(@PathVariable String boardId) throws MBException {
         boardService.getDisplayIdsByBoardId(boardId);
         return buildResponse();
     }
 
-
+    // New endpoint to update board status
+    @PutMapping("/update-status/{boardId}")
+    public MainResponse<String> updateBoardStatus(@PathVariable String boardId, @RequestParam StatusType newStatus) throws MBException {
+        boardService.updateBoardStatus(boardId, newStatus);
+        return buildResponse("Board status updated successfully");
+    }
 }
