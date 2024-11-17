@@ -1,5 +1,6 @@
 package com.myboard.userservice.controller.model.common;
 
+import com.myboard.userservice.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,7 @@ public abstract class AbstractFilterRequest {
     private LocalDate startDate;
     private LocalDate endDate;
     private List<String> ids; // New field to filter by a list of IDs
+    private User createdBy;
 
     // Pagination properties with default values
     private int page = 0;  // Default page number is 0 (first page)
@@ -55,6 +57,10 @@ public abstract class AbstractFilterRequest {
 
         if (isFavorite != null) {
             query.addCriteria(Criteria.where("isFavorite").is(isFavorite));
+        }
+
+        if (createdBy != null) {
+            query.addCriteria(Criteria.where("createdBy").is(createdBy));
         }
 
         return query;

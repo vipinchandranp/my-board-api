@@ -6,6 +6,7 @@ import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.controller.model.common.TimeslotRequest;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.display.request.*;
+import com.myboard.userservice.controller.model.display.response.CurrentlyPlayingBoardsResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysIdNameLocationResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetTimeSlotsResponse;
@@ -15,6 +16,7 @@ import com.myboard.userservice.repository.BoardRepository;
 import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.repository.TimeslotRepository;
 import com.myboard.userservice.types.MediaType;
+import com.myboard.userservice.types.PlayMode;
 import com.myboard.userservice.types.StatusType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -37,10 +40,11 @@ import java.util.stream.Collectors;
 @Service
 public class DisplayService {
 
+    @Autowired
+    private PinService displayPinService;
 
     @Value("${myboard.display.searchRadius}")
     private double searchRadius;
-
 
     // Autowired services
     @Autowired
@@ -70,6 +74,10 @@ public class DisplayService {
 
     @Autowired
     private TimeslotRepository timeslotRepository;
+
+    @Autowired
+    private NSWCheckService nswCheckService;
+
 
     // Handle display approval
     public void handleDisplayApproval(DisplayApprovalRequest displayApprovalRequest) {
@@ -190,9 +198,11 @@ public class DisplayService {
     }
 
     public Page<Display> getFilteredDisplays(AbstractFilterRequest filterRequest, Pageable pageable) {
-        // Pass the entity class directly
+        User createdBy = mbUserDetailsService.getLoggedInUser();
+        filterRequest.setCreatedBy(createdBy);
         return displayRepository.findAllByFilter(filterRequest, Display.class, pageable);
     }
+
     // Save a new display
     public void saveDisplay(MultipartFile file, String displayName) {
         if (file.isEmpty()) {
@@ -235,6 +245,12 @@ public class DisplayService {
             // Update modified info
             display.setModifiedBy(user);
             display.setLastModifiedTime(LocalDateTime.now());
+            displayRepository.save(display);
+            // Generate salt and hashed PIN for the display
+            String hashedPin = displayPinService.generateUniqueDisplayPin(display.getId()); // Generate hashed pin
+
+            // Set the hashed pin and salt in the display
+            display.setDisplayPin(hashedPin);
 
             // Save the display to the database
             displayRepository.save(display);
@@ -243,20 +259,23 @@ public class DisplayService {
             flow.setData(Map.of("displayId", display.getId(), "fileName", uniqueFileName));
 
         } catch (IOException e) {
-            throw new MBException("Failed to save file", e);
+            throw new MBException("Failed to save file or generate hashed pin", e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error generating hashed pin or salt", e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
 
     // Add media to a display
-    public void addMedia(String boardId, MultipartFile file) {
+    public void addMedia(String displayId, MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new MBException("File is empty");
         }
-
-        Board board = boardRepository.findById(boardId).orElse(null);
-        if (board == null) {
-            throw new MBException("Board not found");
+        Display display = displayRepository.findById(displayId).orElse(null);
+        if (display == null) {
+            throw new MBException("Display not found");
         }
 
         try {
@@ -269,10 +288,10 @@ public class DisplayService {
 
             MediaType mediaType = utilService.determineMediaType(file);
             MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/display/" + uniqueFileName, mediaType);
-            board.getMediaFiles().add(mediaFile);
+            display.getMediaFiles().add(mediaFile);
 
-            boardRepository.save(board);
-            flow.setData(Map.of("boardId", board.getId(), "fileName", uniqueFileName));
+            displayRepository.save(display);
+            flow.setData(Map.of("displayId", display.getId(), "fileName", uniqueFileName));
             flow.addInfo("Media added successfully");
         } catch (IOException e) {
             throw new MBException("Failed to save media", e);
@@ -337,7 +356,8 @@ public class DisplayService {
 
             return new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), display.getCreatedTime(), display.getStatus().toString(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // latitude
                     display.getLocation() != null ? display.getLocation()[1] : 0.0, // longitude
-                    boardIds // Include the list of board IDs associated with the display
+                    boardIds,
+                    display.getDisplayPin()
             );
         }).collect(Collectors.toList());
 
@@ -358,7 +378,8 @@ public class DisplayService {
         flow.setData(new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), // Include mediaFiles here
                 display.getCreatedTime(), display.getStatus().name(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // Latitude
                 display.getLocation() != null ? display.getLocation()[1] : 0.0, // Longitude
-                boardIds // Include the list of board IDs associated with the display
+                boardIds,
+                display.getDisplayPin()
         ));
     }
 
@@ -473,5 +494,46 @@ public class DisplayService {
         flow.addInfo("Nearby displays fetched successfully");
         return response;
     }
+
+    public CurrentlyPlayingBoardsResponse getBoardStatus(String displayId) throws MBException {
+        Display display = displayRepository.findById(displayId)
+                .orElseThrow(() -> new MBException("Display not found"));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Timeslot> timeslots = timeslotRepository.findByDisplayId(displayId);
+
+        // Filter for currently playing boards with PlayMode.PLAYING
+        List<String> currentlyPlaying = timeslots.stream()
+                .filter(ts -> ts.getPlayMode() == PlayMode.PLAYING)
+                .filter(ts -> ts.getStartTime().isBefore(now) && ts.getEndTime().isAfter(now))
+                .map(ts -> ts.getBoard().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Filter for previously played boards with PlayMode.PLAYING
+        List<String> previouslyPlayed = timeslots.stream()
+                .filter(ts -> ts.getPlayMode() == PlayMode.PLAYED)
+                .filter(ts -> ts.getEndTime().isBefore(now))
+                .map(ts -> ts.getBoard().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Filter for upcoming boards with PlayMode.PLAYING
+        List<String> upcoming = timeslots.stream()
+                .filter(ts -> ts.getPlayMode() == PlayMode.WAITING_TO_PLAY)
+                .filter(ts -> ts.getStartTime().isAfter(now))
+                .map(ts -> ts.getBoard().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        CurrentlyPlayingBoardsResponse response = new CurrentlyPlayingBoardsResponse();
+        response.setCurrentlyPlaying(currentlyPlaying);
+        response.setPreviouslyPlayed(previouslyPlayed);
+        response.setUpcoming(upcoming);
+
+        return response;
+    }
+
 
 }

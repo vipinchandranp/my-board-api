@@ -1,7 +1,9 @@
 package com.myboard.userservice.service;
 
 import com.myboard.userservice.controller.model.timeslot.request.TimeslotStatusRequest;
+import com.myboard.userservice.controller.model.timeslot.response.TimeSlotBoardToBePlayed;
 import com.myboard.userservice.controller.model.timeslot.response.TimeslotStatusResponse;
+import com.myboard.userservice.entity.Board;
 import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.entity.Timeslot;
 import com.myboard.userservice.entity.User;
@@ -9,15 +11,18 @@ import com.myboard.userservice.properties.TimeslotProperties;
 import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.repository.TimeslotRepository;
 import com.myboard.userservice.types.StatusType;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +40,8 @@ public class TimeslotService {
     @Autowired
     private MBUserDetailsService userDetailsService;
 
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     // Assuming you have a way to get the current date
     private LocalDateTime getCurrentDateTime() {
@@ -109,7 +116,7 @@ public class TimeslotService {
                                 (request.getStatus() == null || timeslot.getStatus().equals(request.getStatus())) // Filter by status
                 )
                 .collect(Collectors.toList());
-    
+
         // Convert filtered timeslots to response DTOs
         return filteredTimeslots.stream()
                 .map(this::convertToTimeslotStatusResponse)
@@ -188,6 +195,53 @@ public class TimeslotService {
 
         return availableDates;
     }
+    public TimeSlotBoardToBePlayed getBoardToBePlayedForDisplay(String displayPin) {
+        // Fetch the Display entity using the displayPin and created by the logged-in user
+        User createdByUser = userDetailsService.getLoggedInUser(); // Get the logged-in user
+        Optional<Display> displayOpt = displayRepository.findByDisplayPinAndCreatedBy(displayPin, createdByUser);
+
+        if (displayOpt.isEmpty()) {
+            return null; // Display not found for the given pin
+        }
+
+        Display display = displayOpt.get();
+
+        Query query = new Query();
+
+        Instant currentTime = Instant.now();
+
+        // Build your query with criteria
+        query.addCriteria(Criteria.where("display.$id").is(new ObjectId(display.getId())))
+                .addCriteria(Criteria.where("startTime").lte(Date.from(currentTime)))
+                .addCriteria(Criteria.where("endTime").gte(Date.from(currentTime)))
+                .addCriteria(Criteria.where("status").is(StatusType.APPROVED));
+
+        // Execute the query
+        Timeslot timeslot = mongoTemplate.findOne(query, Timeslot.class);
+
+        if(timeslot == null){
+            return null; // TODO Generate QR Code
+        }
+
+        // Assuming the board is already set for the timeslot, fetch the board details
+        Board board = timeslot.getBoard();
+
+        // Fetch media path from the board, checking if there are any media files associated with the board
+        String boardMediaPath = (board.getMediaFiles() != null && !board.getMediaFiles().isEmpty())
+                ? board.getMediaFiles().get(0).getFileName() // Set boardMediaPath (null if no media files)
+                : null;
+
+        // Return the required response with the board and timeslot details
+        return TimeSlotBoardToBePlayed.builder()
+                .boardId(board.getId())              // Set the board ID
+                .displayId(display.getId())          // Set the display ID
+                .boardName(board.getName())          // Set the board name
+                .displayName(display.getName())      // Set the display name
+                .boardMediaPath(boardMediaPath)      // Set boardMediaPath (null if no media files)
+                .timeslotId(timeslot.getId())
+                .build();
+    }
+
 
 
 }

@@ -21,4 +21,9 @@ public interface DisplayRepository extends MongoRepository<Display, String>, Com
 
     Page<Display> findAll(Pageable pageable);
 
+    Optional<Display> findByCreatedByAndDisplayPin(User createdBy, String displayPin);
+
+    Optional<Display> findByDisplayPin(String displayPin);
+
+    Optional<Display> findByDisplayPinAndCreatedBy(String displayPin, User createdByUser);
 }

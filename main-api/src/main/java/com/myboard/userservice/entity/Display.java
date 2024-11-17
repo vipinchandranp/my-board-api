@@ -2,13 +2,18 @@ package com.myboard.userservice.entity;
 
 import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.types.StatusType;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.PrePersist;
 import lombok.*;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
@@ -37,4 +42,7 @@ public class Display extends Base {
     // New field to store associated boards
     @DBRef(lazy = true) // Create a DB reference to Board entities
     private List<Board> boards = new ArrayList<>();
+
+    private String displayPin;
+
 }

@@ -2,6 +2,7 @@ package com.myboard.userservice.controller;
 
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.timeslot.request.TimeslotStatusRequest;
+import com.myboard.userservice.controller.model.timeslot.response.TimeSlotBoardToBePlayed;
 import com.myboard.userservice.controller.model.timeslot.response.TimeslotStatusResponse;
 import com.myboard.userservice.service.TimeslotService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,5 +39,15 @@ public class TimeslotController extends BaseController {
     public ResponseEntity<List<LocalDate>> getAvailableDatesForUserDisplays() {
         List<LocalDate> availableDates = timeslotService.getAvailableDatesForUserDisplays();
         return ResponseEntity.ok(availableDates);
+    }
+
+    // New endpoint to get the board to be played based on display pin and current time
+
+    // New endpoint to get the board to be played based on display pin
+    @GetMapping("/play/board")
+    public MainResponse<TimeSlotBoardToBePlayed> getBoardForDisplay(@RequestParam String displayPin) {
+        // Call the service method to get the board based on the displayPin
+        TimeSlotBoardToBePlayed timeSlotBoardToBePlayed = timeslotService.getBoardToBePlayedForDisplay(displayPin);
+        return buildResponse(timeSlotBoardToBePlayed);
     }
 }

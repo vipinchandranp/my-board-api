@@ -2,8 +2,10 @@ package com.myboard.userservice.service;
 
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.user.*;
+import com.myboard.userservice.entity.Display;
 import com.myboard.userservice.entity.User;
 import com.myboard.userservice.exception.MBException;
+import com.myboard.userservice.repository.DisplayRepository;
 import com.myboard.userservice.repository.UserRepository;
 import com.myboard.userservice.security.JwtUtil;
 import com.myboard.userservice.security.MBAuthManager;
@@ -53,6 +55,12 @@ public class UserService {
     @Value("${myboard.user.profile-pic-path}")
     private String profilePicPath;
 
+    @Autowired
+    private PinService pinService;
+
+    @Autowired
+    private DisplayRepository displayRepository;
+
 
     public void handleUserSignup(UserSignupRequest signupRequest) throws MBException {
         // Check if the user already exists
@@ -78,10 +86,34 @@ public class UserService {
         flow.setData(null);
     }
 
-    public void handleUserLogin(UserLoginRequest loginRequest) throws MBException {
-        Authentication authentication = myBoardAuthManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+    public void handleUserLogin(UserLoginRequest loginRequest) throws Exception {
+        // Authenticate user credentials
+        Authentication authentication = myBoardAuthManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+
+        // Generate JWT token
         String jwtToken = jwtUtil.generateToken(authentication.getName());
 
+        // Retrieve display PIN from the request
+        String displayPin = loginRequest.getDisplayPin();
+
+        // If the displayPin is not null or empty, attempt to retrieve the associated display
+        if (displayPin != null && !displayPin.isEmpty()) {
+            // Get the authenticated user (ensure the principal is a User object)
+            User createdByUser = (User) authentication.getPrincipal();
+
+            // Retrieve the Display based on the authenticated user and the provided displayPin
+            Display display = displayRepository
+                    .findByCreatedByAndDisplayPin(createdByUser, displayPin)
+                    .orElse(null);
+
+            if(display == null){
+                flow.addError("Display not found with the provided pin");
+            }
+            // Optionally, you can do something with the retrieved display here, such as logging or validating
+        }
+
+        // Prepare the response with the generated JWT token
         UserLoginResponse loginResponse = new UserLoginResponse();
         loginResponse.setJwtToken(jwtToken);
         flow.setData(loginResponse);
@@ -179,7 +211,7 @@ public class UserService {
         // Check if the city name exists for the user
         String cityName = user.getCityName();
         if (cityName == null || cityName.isEmpty()) {
-            throw new MBException("User city information is not available");
+            return "Bangalore";
         }
 
         // Return the city name

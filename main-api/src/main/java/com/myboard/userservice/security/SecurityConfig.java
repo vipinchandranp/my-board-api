@@ -57,10 +57,10 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of("*")); // Allows all origins; customize as needed
+		configuration.setAllowedOrigins(List.of("192.168.1.43")); // Allows all origins; customize as needed
 		configuration.setAllowedMethods(List.of("*")); // Allows all HTTP methods
 		configuration.setAllowedHeaders(List.of("*")); // Allows all headers
-		configuration.setAllowCredentials(true); // Allows credentials; set to `false` if credentials are not needed
+		configuration.setAllowCredentials(true);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);

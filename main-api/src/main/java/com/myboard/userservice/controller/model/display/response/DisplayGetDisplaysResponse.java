@@ -27,7 +27,7 @@ public class DisplayGetDisplaysResponse {
 
     // Add a list of board IDs associated with the display
     private List<String> boardIds; // Changed to List<String> for board IDs
-
+    private String displayPin;
     // Explicit constructor (if you want to manually define it)
     public DisplayGetDisplaysResponse(
             String displayId,
@@ -37,7 +37,8 @@ public class DisplayGetDisplaysResponse {
             String status,
             double latitude,
             double longitude,
-            List<String> boardIds) {
+            List<String> boardIds,
+            String displayPin) {
         this.displayId = displayId;
         this.displayName = displayName;
         this.mediaFiles = mediaFiles;
@@ -46,5 +47,6 @@ public class DisplayGetDisplaysResponse {
         this.latitude = latitude;
         this.longitude = longitude;
         this.boardIds = boardIds;
+        this.displayPin = displayPin;
     }
 }

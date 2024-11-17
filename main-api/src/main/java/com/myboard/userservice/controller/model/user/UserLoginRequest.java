@@ -14,4 +14,6 @@ public class UserLoginRequest {
 
     private Integer phone;
 
+    private String displayPin;
+
 }

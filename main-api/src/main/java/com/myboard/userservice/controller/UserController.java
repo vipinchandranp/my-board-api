@@ -38,7 +38,7 @@ public class UserController extends BaseController {
     }
 
     @PostMapping("/login")
-    public MainResponse<UserLoginResponse> login(@RequestBody UserLoginRequest loginRequest) throws MBException {
+    public MainResponse<UserLoginResponse> login(@RequestBody UserLoginRequest loginRequest) throws Exception {
         userService.handleUserLogin(loginRequest);
         return new MainResponse<>(flow);
     }

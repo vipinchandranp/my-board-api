@@ -6,6 +6,7 @@ import com.myboard.userservice.controller.model.board.response.BoardGetBoardsRes
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.display.request.*;
+import com.myboard.userservice.controller.model.display.response.CurrentlyPlayingBoardsResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetBoardIdsResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysIdNameLocationResponse;
@@ -87,7 +88,7 @@ public class DisplayController extends BaseController {
         return buildResponse();
     }
 
-    @PutMapping("/media/add/{boardId}")
+    @PutMapping("/media/add/{displayId}")
     public MainResponse<String> addMedia(@PathVariable String displayId, @RequestParam("file") MultipartFile file) throws MBException, IOException {
         displayService.addMedia(displayId, file);
         return buildResponse();
@@ -128,7 +129,8 @@ public class DisplayController extends BaseController {
                         display.getStatus().name(), // Convert enum to string
                         display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[0] : 0.0, // Latitude
                         display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[1] : 0.0, // Longitude
-                        display.getBoards().stream().map(board -> board.getId()).collect(Collectors.toList()) // Collect board IDs
+                        display.getBoards().stream().map(board -> board.getId()).collect(Collectors.toList()), // Collect board IDs
+                        display.getDisplayPin()
                 )) // Mapping Display entity to DisplayGetDisplaysResponse
                 .collect(Collectors.toList());
 
@@ -161,5 +163,9 @@ public class DisplayController extends BaseController {
         List<DisplayGetDisplaysIdNameLocationResponse> getAllDisplays = displayService.getAllDisplays();
         return new MainResponse<>(getAllDisplays);
     }
-
+    @GetMapping("/boards/status/{displayId}")
+    public MainResponse<CurrentlyPlayingBoardsResponse> getBoardStatusByDisplayId(@PathVariable String displayId) throws MBException {
+        CurrentlyPlayingBoardsResponse response = displayService.getBoardStatus(displayId);
+        return new MainResponse<>(response);
+    }
 }

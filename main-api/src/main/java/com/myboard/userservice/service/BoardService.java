@@ -205,7 +205,8 @@ public class BoardService {
 
 
     public Page<Board> getFilteredBoards(AbstractFilterRequest filterRequest, Pageable pageable) {
-        // Pass the entity class directly
+        User createdBy = mbUserDetailsService.getLoggedInUser();
+        filterRequest.setCreatedBy(createdBy);
         return boardRepository.findAllByFilter(filterRequest, Board.class, pageable);
     }
 

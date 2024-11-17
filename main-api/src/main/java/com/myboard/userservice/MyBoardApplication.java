@@ -22,7 +22,7 @@ public class MyBoardApplication {
     @PostConstruct
     void started() {
         // Set the default time zone to UTC
-        TimeZone.setDefault(TimeZone.getTimeZone("IST"));
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Kolkata"));
     }
 
     @Bean

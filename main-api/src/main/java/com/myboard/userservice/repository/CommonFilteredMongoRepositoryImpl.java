@@ -1,11 +1,12 @@
 package com.myboard.userservice.repository;
 
 import com.myboard.userservice.controller.model.common.AbstractFilterRequest;
+import com.myboard.userservice.service.MBUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
@@ -18,8 +19,9 @@ public class CommonFilteredMongoRepositoryImpl<T> implements CommonFilteredMongo
     @Autowired
     private MongoTemplate mongoTemplate;
 
+
     /**
-     * Find all entities filtered and paginated based on AbstractFilterRequest.
+     * Find all entities filtered and paginated based on AbstractFilterRequest and logged-in user.
      *
      * @param filterRequest The filter request that contains query parameters
      * @param clazz         The class type of the entity to query
@@ -28,20 +30,22 @@ public class CommonFilteredMongoRepositoryImpl<T> implements CommonFilteredMongo
      */
     @Override
     public Page<T> findAllByFilter(AbstractFilterRequest filterRequest, Class<T> clazz, Pageable pageable) {
-        // Build the query using AbstractFilterRequest's buildFilterQuery method
+        // Get the logged-in user's ID
+
+        // Build the query for filtering by logged-in user and additional filter criteria
         Query query = filterRequest.buildFilterQuery();
 
         // Apply pagination with the provided Pageable object
-        Pageable pageRequest = PageRequest.of(filterRequest.getPage(), filterRequest.getSize());
+        query.with(pageable);
 
         // Execute the query with pagination and return results
-        List<T> results = mongoTemplate.find(query.with(pageRequest), clazz);
+        List<T> results = mongoTemplate.find(query, clazz);
 
         // Return a Page object with results and total count
         return PageableExecutionUtils.getPage(
                 results,
-                pageRequest,
-                () -> mongoTemplate.count(query, clazz)
+                pageable,
+                () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), clazz)
         );
     }
 }
