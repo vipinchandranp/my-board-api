@@ -1,5 +1,11 @@
 package com.myboard.userservice.service;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.myboard.userservice.controller.model.timeslot.request.TimeslotStatusRequest;
 import com.myboard.userservice.controller.model.timeslot.response.TimeSlotBoardToBePlayed;
 import com.myboard.userservice.controller.model.timeslot.response.TimeslotStatusResponse;
@@ -17,12 +23,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.data.mongodb.core.MongoTemplate;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -207,7 +214,6 @@ public class TimeslotService {
         Display display = displayOpt.get();
 
         Query query = new Query();
-
         Instant currentTime = Instant.now();
 
         // Build your query with criteria
@@ -219,29 +225,61 @@ public class TimeslotService {
         // Execute the query
         Timeslot timeslot = mongoTemplate.findOne(query, Timeslot.class);
 
-        if(timeslot == null){
-            return null; // TODO Generate QR Code
+        if (timeslot == null) {
+            // Generate QR Code as bytes for the display ID
+            byte[] qrCodeBytes = generateQRCode(display.getId());
+            if (qrCodeBytes != null) {
+                return TimeSlotBoardToBePlayed.builder()
+                        .displayId(display.getId())
+                        .displayName(display.getName())
+                        .displayQrCode(qrCodeBytes) // Set the generated QR code bytes
+                        .message("Scan QR code to upload your content")
+                        .build();
+            } else {
+                return null; // QR code generation failed
+            }
         }
 
         // Assuming the board is already set for the timeslot, fetch the board details
         Board board = timeslot.getBoard();
-
-        // Fetch media path from the board, checking if there are any media files associated with the board
         String boardMediaPath = (board.getMediaFiles() != null && !board.getMediaFiles().isEmpty())
-                ? board.getMediaFiles().get(0).getFileName() // Set boardMediaPath (null if no media files)
+                ? board.getMediaFiles().get(0).getFileName()
                 : null;
 
         // Return the required response with the board and timeslot details
         return TimeSlotBoardToBePlayed.builder()
-                .boardId(board.getId())              // Set the board ID
-                .displayId(display.getId())          // Set the display ID
-                .boardName(board.getName())          // Set the board name
-                .displayName(display.getName())      // Set the display name
-                .boardMediaPath(boardMediaPath)      // Set boardMediaPath (null if no media files)
+                .boardId(board.getId())
+                .displayId(display.getId())
+                .boardName(board.getName())
+                .displayName(display.getName())
+                .boardMediaPath(boardMediaPath)
                 .timeslotId(timeslot.getId())
                 .build();
     }
 
+    private byte[] generateQRCode(String displayId) {
+        String qrCodeText = "Display ID: " + displayId;
+        int size = 250;
 
+        try {
+            Map<EncodeHintType, ErrorCorrectionLevel> hintMap = new HashMap<>();
+            hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+
+            QRCodeWriter qrCodeWriter = new QRCodeWriter();
+            BitMatrix byteMatrix = qrCodeWriter.encode(qrCodeText, BarcodeFormat.QR_CODE, size, size, hintMap);
+
+            // Convert BitMatrix to BufferedImage
+            BufferedImage qrImage = MatrixToImageWriter.toBufferedImage(byteMatrix);
+
+            // Write BufferedImage to ByteArrayOutputStream as PNG
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ImageIO.write(qrImage, "PNG", outputStream);
+
+            return outputStream.toByteArray(); // Return QR code as bytes
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 }
