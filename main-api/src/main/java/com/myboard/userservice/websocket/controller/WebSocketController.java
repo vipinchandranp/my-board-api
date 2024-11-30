@@ -1,4 +1,4 @@
-package com.myboard.userservice.controller;
+package com.myboard.userservice.websocket.controller;
 
 import com.myboard.userservice.service.NotificationService;
 import org.springframework.messaging.handler.annotation.MessageMapping;

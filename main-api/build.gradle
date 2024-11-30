@@ -13,6 +13,14 @@ repositories {
 }
 
 dependencies {
+    // Spring Boot Starter for WebSockets (supports STOMP)
+    implementation 'org.springframework.boot:spring-boot-starter-websocket' // WebSocket support
+    implementation 'org.springframework:spring-messaging' // For WebSocket messaging
+
+    // Spring Boot Starter for AMQP (RabbitMQ integration)
+    implementation 'org.springframework.boot:spring-boot-starter-amqp' // RabbitMQ
+
+    // Spring Boot mail, web, and other modules
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
@@ -25,20 +33,32 @@ dependencies {
     implementation 'org.springframework.session:spring-session-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-logging'
+
+    // JAXB and other utility libraries
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'javax.persistence:javax.persistence-api:2.2'
+
+    // JWT and Swagger dependencies
     implementation 'io.jsonwebtoken:jjwt:0.12.6'
     implementation 'io.springfox:springfox-swagger2:3.0.0'
     implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+
+    // QR code generation and Google Cloud Vision
     implementation 'net.glxn:qrgen:1.4'
     implementation 'com.google.cloud:google-cloud-vision:3.34.0'
+
+    // Kafka and Jackson for serialization
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket' // WebSocket support
-    implementation 'org.springframework:spring-messaging' // For WebSocket messaging
+
+    // Lombok for code generation
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+    // Kotlin standard library
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    // ZXing for QR code scanning
     implementation 'com.google.zxing:core:3.5.0'
     implementation 'com.google.zxing:javase:3.5.0'
 }

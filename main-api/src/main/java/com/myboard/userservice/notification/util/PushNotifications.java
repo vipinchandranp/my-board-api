@@ -5,7 +5,7 @@ import com.myboard.userservice.notification.model.NotificationDTO;
 import com.myboard.userservice.types.NotificationType;
 import com.myboard.userservice.entity.Notification;
 import com.myboard.userservice.repository.NotificationRepository;
-import com.myboard.userservice.security.MyWebSocketHandler;
+import com.myboard.userservice.websocket.config.MyWebSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

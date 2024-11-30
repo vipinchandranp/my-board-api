@@ -1,4 +1,4 @@
-package com.myboard.userservice.security;
+package com.myboard.userservice.websocket.config;
 
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -9,9 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class MyWebSocketHandler extends TextWebSocketHandler {
 

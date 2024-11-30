@@ -94,25 +94,6 @@ public class UserService {
         // Generate JWT token
         String jwtToken = jwtUtil.generateToken(authentication.getName());
 
-        // Retrieve display PIN from the request
-        String displayPin = loginRequest.getDisplayPin();
-
-        // If the displayPin is not null or empty, attempt to retrieve the associated display
-        if (displayPin != null && !displayPin.isEmpty()) {
-            // Get the authenticated user (ensure the principal is a User object)
-            User createdByUser = (User) authentication.getPrincipal();
-
-            // Retrieve the Display based on the authenticated user and the provided displayPin
-            Display display = displayRepository
-                    .findByCreatedByAndDisplayPin(createdByUser, displayPin)
-                    .orElse(null);
-
-            if(display == null){
-                flow.addError("Display not found with the provided pin");
-            }
-            // Optionally, you can do something with the retrieved display here, such as logging or validating
-        }
-
         // Prepare the response with the generated JWT token
         UserLoginResponse loginResponse = new UserLoginResponse();
         loginResponse.setJwtToken(jwtToken);
