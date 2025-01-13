@@ -20,6 +20,7 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Register the WebSocket endpoint (clients will connect to this endpoint)
-        registry.addEndpoint("/websocket").setAllowedOrigins("*");
+        registry.addEndpoint("/websocket")
+                .setHandshakeHandler(new CustomHandshakeHandler());
     }
 }

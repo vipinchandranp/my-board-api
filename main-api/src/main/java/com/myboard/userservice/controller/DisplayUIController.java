@@ -5,7 +5,6 @@ import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.displayui.DisplayUiConnectRequest;
 import com.myboard.userservice.controller.model.user.*;
 import com.myboard.userservice.exception.MBException;
-import com.myboard.userservice.service.DisplayDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +12,6 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 @RequestMapping("/displayui")
 public class DisplayUIController extends BaseController {
-
-    @Autowired
-    private DisplayDeviceService displayUIService;
 
     @Autowired
     private WorkFlow flow;

@@ -33,7 +33,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String requestUri = request.getRequestURI();
 
         // Exclude the filter for the login and signup endpoints
-        if (!requestUri.endsWith("/myboard/websocket") && !requestUri.endsWith("/myboard/user/login") && !requestUri.endsWith("/myboard/user/signup")) {
+        if (!requestUri.endsWith("/myboard/user/login") && !requestUri.endsWith("/myboard/user/signup")) {
             final String authorizationHeader = request.getHeader("Authorization");
 
             String username = null;

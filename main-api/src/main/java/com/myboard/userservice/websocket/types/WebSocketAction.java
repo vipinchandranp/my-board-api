@@ -4,6 +4,7 @@ public enum WebSocketAction {
     REGISTER_DISPLAY("register_display"),
     PLAY_CONTENT("play_content"),
     STOP_CONTENT("stop_content"),
+    QR_CODE("qr_code"),
     UNKNOWN("unknown"); // For unrecognized actions
     
     private final String action;

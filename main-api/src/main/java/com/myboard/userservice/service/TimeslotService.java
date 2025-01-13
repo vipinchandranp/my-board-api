@@ -202,9 +202,15 @@ public class TimeslotService {
 
         return availableDates;
     }
-    public TimeSlotBoardToBePlayed getBoardToBePlayedForDisplay(String displayPin) {
+    public TimeSlotBoardToBePlayed getBoardToBePlayedForDisplay(String displayPin, String username) {
         // Fetch the Display entity using the displayPin and created by the logged-in user
-        User createdByUser = userDetailsService.getLoggedInUser(); // Get the logged-in user
+        User createdByUser = null;
+        if(username != null){
+
+        }else{
+            createdByUser = userDetailsService.getLoggedInUser(); // Get the logged-in user
+        }
+
         Optional<Display> displayOpt = displayRepository.findByDisplayPinAndCreatedBy(displayPin, createdByUser);
 
         if (displayOpt.isEmpty()) {
@@ -257,7 +263,7 @@ public class TimeslotService {
                 .build();
     }
 
-    private byte[] generateQRCode(String displayId) {
+    public byte[] generateQRCode(String displayId) {
         String qrCodeText = "Display ID: " + displayId;
         int size = 250;
 

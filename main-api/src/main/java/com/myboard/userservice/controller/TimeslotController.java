@@ -41,7 +41,7 @@ public class TimeslotController extends BaseController {
         return ResponseEntity.ok(availableDates);
     }
 
-    // New endpoint to get the board to be played based on display pin and current time
+/*    // New endpoint to get the board to be played based on display pin and current time
 
     // New endpoint to get the board to be played based on display pin
     @GetMapping("/play/board")
@@ -49,5 +49,5 @@ public class TimeslotController extends BaseController {
         // Call the service method to get the board based on the displayPin
         TimeSlotBoardToBePlayed timeSlotBoardToBePlayed = timeslotService.getBoardToBePlayedForDisplay(displayPin);
         return buildResponse(timeSlotBoardToBePlayed);
-    }
+    }*/
 }
