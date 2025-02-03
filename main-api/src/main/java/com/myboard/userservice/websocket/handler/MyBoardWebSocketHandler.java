@@ -52,7 +52,7 @@ public class MyBoardWebSocketHandler extends TextWebSocketHandler {
     // Handle the 'play_content' action
     private void handlePlayContent(WebSocketSession session, Map<String, Object> requestData) throws IOException {
         String displayPin = (String) requestData.get("displayPin");
-        TimeSlotBoardToBePlayed boardToBePlayed = timeslotService.getBoardToBePlayedForDisplay(displayPin, null);
+        TimeSlotBoardToBePlayed boardToBePlayed = timeslotService.getBoardToBePlayedForDisplay(displayPin);
 
         MainResponse<TimeSlotBoardToBePlayed> response;
         if (boardToBePlayed != null) {

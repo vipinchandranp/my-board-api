@@ -32,34 +32,74 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // Get the request URI
         String requestUri = request.getRequestURI();
 
-        // Exclude the filter for the login and signup endpoints
-        if (!requestUri.endsWith("/myboard/user/login") && !requestUri.endsWith("/myboard/user/signup")) {
-            final String authorizationHeader = request.getHeader("Authorization");
+        // Exclude the filter for login, signup, and other public endpoints
+        if (isPublicEndpoint(requestUri)) {
+            chain.doFilter(request, response);
+            return;
+        }
 
-            String username = null;
-            String jwt = null;
+        // Extract token from Authorization header or query parameters
+        String jwt = extractToken(request);
+        String username = null;
 
-            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-                jwt = authorizationHeader.substring(7);
+        if (jwt != null) {
+            try {
                 username = jwtUtil.extractUsername(jwt);
+            } catch (Exception e) {
+                logger.warn("Invalid JWT token: " + e.getMessage());
             }
+        }
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+        // Authenticate the user if username is extracted and no existing authentication is present
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-                if (jwtUtil.validateToken(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
+            if (jwtUtil.validateToken(jwt, userDetails)) {
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
 
-                    usernamePasswordAuthenticationToken
-                            .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-                }
+                // Set authentication in the SecurityContext
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         }
 
         chain.doFilter(request, response);
     }
 
+    /**
+     * Determines if the request URI matches any public endpoints.
+     *
+     * @param requestUri the request URI
+     * @return true if the URI corresponds to a public endpoint, false otherwise
+     */
+    private boolean isPublicEndpoint(String requestUri) {
+        return requestUri.endsWith("/myboard/user/login") ||
+                requestUri.endsWith("/myboard/user/signup") ||
+                requestUri.endsWith("/public-endpoint"); // Add other public URIs if needed
+    }
+
+    /**
+     * Extracts the JWT token from the Authorization header or query parameter.
+     *
+     * @param request the HttpServletRequest
+     * @return the extracted JWT token, or null if not found
+     */
+    private String extractToken(HttpServletRequest request) {
+        // Check the Authorization header first
+        String authorizationHeader = request.getHeader("Authorization");
+
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+
+        // Fallback to query parameter
+        String tokenParam = request.getParameter("token");
+        if (tokenParam != null) {
+            return tokenParam;
+        }
+
+        return null;
+    }
 }

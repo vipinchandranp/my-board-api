@@ -1,5 +1,6 @@
-package com.myboard.userservice.security;
+package com.myboard.userservice.websocket.config;
 
+import com.myboard.userservice.security.JwtUtil;
 import com.myboard.userservice.service.MBUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;

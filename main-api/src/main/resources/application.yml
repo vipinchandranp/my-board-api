@@ -46,11 +46,13 @@ spring:
   jackson:
     time-zone: Asia/Kolkata
   timezone: Asia/Kolkata
-logging.level.org.springframework.security: DEBUG
+logging.level.org.springframework: TRACE
+logging.level.org.springframework.security: TRACE
+logging.level.org.springframework.session: TRACE
 logging.level.org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 logging.level.org.springframework.data.mongodb.core.MongoOperations: DEBUG
 spring.servlet.multipart.max-file-size: 50MB
-spring.servlet.multipart.e nabled: true
+spring.servlet.multipart.enabled: true
 spring.servlet.multipart.max-request-size: 50MB
 logging.level.root: INFO
 myboard:
@@ -67,3 +69,11 @@ myboard:
     path: C:/Users/vipin/development/myboard-uploaded-data/board
   timeslots:
     default-duration: 60  # Duration in minutes
+  payment:
+    platform_fees: 10 # in percent
+    paytm:
+      merchant:
+        id: YOUR_MERCHANT_ID
+        key: YOUR_MERCHANT_KEY
+        website: YOUR_MERCHANT_WEBSITE
+      environment: sandbox  # Set this to "production" when moving to production environment

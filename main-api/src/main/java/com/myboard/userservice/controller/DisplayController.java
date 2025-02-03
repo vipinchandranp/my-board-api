@@ -82,9 +82,23 @@ public class DisplayController extends BaseController {
         return new MainResponse<>(flow);
     }
 
-    @PostMapping("/media/save")
-    public MainResponse<String> saveDisplay(@RequestParam("file") MultipartFile file, @RequestParam String displayName) throws MBException, IOException {
-        displayService.saveDisplay(file, displayName);
+    @PostMapping("/save")
+    public MainResponse<String> saveDisplay(@RequestParam("displayName") String displayName,
+                                            @RequestParam("price") double price,
+                                            @RequestParam(value = "latitude", required = false) Double latitude,
+                                            @RequestParam(value = "longitude", required = false) Double longitude,
+                                            @RequestParam("files") List<MultipartFile> files) throws IOException {
+        // Map request data to SaveDisplay model
+        DisplaySaveRequest saveDisplay = new DisplaySaveRequest();
+        saveDisplay.setDisplayName(displayName);
+        saveDisplay.setPrice(price);
+        saveDisplay.setLatitude(latitude);
+        saveDisplay.setLongitude(longitude);
+        saveDisplay.setFiles(files);
+
+        // Save the display using the service layer
+        displayService.saveDisplay(saveDisplay);
+
         return buildResponse();
     }
 
@@ -130,7 +144,8 @@ public class DisplayController extends BaseController {
                         display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[0] : 0.0, // Latitude
                         display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[1] : 0.0, // Longitude
                         display.getBoards().stream().map(board -> board.getId()).collect(Collectors.toList()), // Collect board IDs
-                        display.getDisplayPin()
+                        display.getDisplayPin(),
+                        display.getPrice()
                 )) // Mapping Display entity to DisplayGetDisplaysResponse
                 .collect(Collectors.toList());
 

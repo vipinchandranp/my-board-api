@@ -61,6 +61,8 @@ dependencies {
     // ZXing for QR code scanning
     implementation 'com.google.zxing:core:3.5.0'
     implementation 'com.google.zxing:javase:3.5.0'
+
+
 }
 
 test {

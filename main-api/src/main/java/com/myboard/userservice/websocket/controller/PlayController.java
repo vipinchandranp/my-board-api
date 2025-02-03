@@ -53,7 +53,7 @@ public class PlayController {
         System.out.println("Extracted displayPin: " + displayPin);
 
         // Get the board or QR code for the display pin
-        TimeSlotBoardToBePlayed timeSlotBoardToBePlayed = timeslotService.getBoardToBePlayedForDisplay(displayPin, username);
+        TimeSlotBoardToBePlayed timeSlotBoardToBePlayed = timeslotService.getBoardToBePlayedForDisplay(displayPin);
 
         if (timeSlotBoardToBePlayed == null) {
             // Generate QR Code response if no board is associated with the display

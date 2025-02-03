@@ -202,16 +202,10 @@ public class TimeslotService {
 
         return availableDates;
     }
-    public TimeSlotBoardToBePlayed getBoardToBePlayedForDisplay(String displayPin, String username) {
+    public TimeSlotBoardToBePlayed getBoardToBePlayedForDisplay(String displayPin) {
         // Fetch the Display entity using the displayPin and created by the logged-in user
-        User createdByUser = null;
-        if(username != null){
-
-        }else{
-            createdByUser = userDetailsService.getLoggedInUser(); // Get the logged-in user
-        }
-
-        Optional<Display> displayOpt = displayRepository.findByDisplayPinAndCreatedBy(displayPin, createdByUser);
+        User user = userDetailsService.getLoggedInUser();
+        Optional<Display> displayOpt = displayRepository.findByDisplayPinAndCreatedBy(displayPin, user);
 
         if (displayOpt.isEmpty()) {
             return null; // Display not found for the given pin
@@ -239,7 +233,7 @@ public class TimeslotService {
                         .displayId(display.getId())
                         .displayName(display.getName())
                         .displayQrCode(qrCodeBytes) // Set the generated QR code bytes
-                        .message("Scan QR code to upload your content")
+                        .message("Scan QR code")
                         .build();
             } else {
                 return null; // QR code generation failed
@@ -264,7 +258,7 @@ public class TimeslotService {
     }
 
     public byte[] generateQRCode(String displayId) {
-        String qrCodeText = "Display ID: " + displayId;
+        String qrCodeText = displayId;
         int size = 250;
 
         try {

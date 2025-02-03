@@ -24,6 +24,7 @@ public class DisplayGetDisplaysResponse {
     // Add geo-location fields
     private double latitude;
     private double longitude;
+    private double price;
 
     // Add a list of board IDs associated with the display
     private List<String> boardIds; // Changed to List<String> for board IDs
@@ -38,7 +39,8 @@ public class DisplayGetDisplaysResponse {
             double latitude,
             double longitude,
             List<String> boardIds,
-            String displayPin) {
+            String displayPin,
+            double price) {
         this.displayId = displayId;
         this.displayName = displayName;
         this.mediaFiles = mediaFiles;
@@ -48,5 +50,6 @@ public class DisplayGetDisplaysResponse {
         this.longitude = longitude;
         this.boardIds = boardIds;
         this.displayPin = displayPin;
+        this.price = price;
     }
 }

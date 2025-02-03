@@ -47,7 +47,7 @@ public class SecurityConfig {
 							response.getWriter().flush();
 						}))
 				.authorizeHttpRequests(authz -> authz
-						.requestMatchers("/user/login", "/user/signup", "/error", "/file/**","/websocket/**")
+						.requestMatchers("/user/login", "/user/signup", "/error", "/file/**","/websocket")
 						.permitAll()
 						.anyRequest().authenticated());
 
@@ -57,7 +57,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of("192.168.1.43")); // Allows all origins; customize as needed
+		configuration.setAllowedOriginPatterns(List.of("http://localhost:*")); // Allows all origins; customize as needed
 		configuration.setAllowedMethods(List.of("*")); // Allows all HTTP methods
 		configuration.setAllowedHeaders(List.of("*")); // Allows all headers
 		configuration.setAllowCredentials(true);

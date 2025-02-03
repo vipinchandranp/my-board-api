@@ -5,7 +5,6 @@ import com.myboard.userservice.notification.model.NotificationDTO;
 import com.myboard.userservice.types.NotificationType;
 import com.myboard.userservice.entity.Notification;
 import com.myboard.userservice.repository.NotificationRepository;
-import com.myboard.userservice.websocket.config.MyWebSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -29,28 +28,7 @@ public class PushNotifications {
         int unreadCount = unreadNotifications.size(); // Count of unread notifications
 
         if (unreadCount > 0) {
-            Set<WebSocketSession> sessions = MyWebSocketHandler.getSessions();
 
-            synchronized (sessions) {
-                for (WebSocketSession session : sessions) {
-                    // Create a notification for unread count
-                    NotificationDTO countNotification = new NotificationDTO(
-                            null, // No notification ID needed for count
-                            NotificationType.UNREAD_NOTIFICATION_COUNT,
-                            false, // IsRead does not apply here
-                            String.valueOf(unreadCount) // Send count as payload
-                    );
-
-                    try {
-                        // Convert NotificationDTO to JSON string
-                        String jsonMessage = objectMapper.writeValueAsString(countNotification);
-                        session.sendMessage(new TextMessage(jsonMessage));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
         }
     }
 }

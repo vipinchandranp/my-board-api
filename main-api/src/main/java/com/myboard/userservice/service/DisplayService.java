@@ -203,63 +203,81 @@ public class DisplayService {
         return displayRepository.findAllByFilter(filterRequest, Display.class, pageable);
     }
 
-    // Save a new display
-    public void saveDisplay(MultipartFile file, String displayName) {
-        if (file.isEmpty()) {
-            throw new MBException("File is empty");
+    public void saveDisplay(DisplaySaveRequest displayRequest) {
+        if (displayRequest.getFiles().isEmpty()) {
+            throw new MBException("Files are empty");
         }
 
         try {
             // Get logged-in user
             User user = mbUserDetailsService.getLoggedInUser();
 
-            // Generate a unique file name
-            String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-
-            // Define the file path
-            Path filePath = Paths.get(displayPath, user.getUsername(), uniqueFileName);
-
-            // Ensure directories exist
-            Files.createDirectories(filePath.getParent());
-
-            // Write file to the directory
-            Files.write(filePath, file.getBytes());
-
             // Retrieve or create the display
-            Display display = displayRepository.findByName(displayName).orElseGet(() -> {
+            Display display = displayRepository.findByName(displayRequest.getDisplayName()).orElseGet(() -> {
                 Display newDisplay = new Display();
-                newDisplay.setName(displayName);
+                newDisplay.setName(displayRequest.getDisplayName());
+                newDisplay.setPrice(displayRequest.getPrice());  // Ensure the price is set
+
+                // Set latitude and longitude in the location array
+                newDisplay.setLatitude(displayRequest.getLatitude());
+                newDisplay.setLongitude(displayRequest.getLongitude());
+
                 newDisplay.setCreatedBy(user);
                 newDisplay.setCreatedTime(LocalDateTime.now());
                 newDisplay.setMediaFiles(new ArrayList<>()); // Initialize mediaFiles list
                 return newDisplay;
             });
 
-            // Determine media type and create MediaFile object
-            MediaType mediaType = utilService.determineMediaType(file);
-            MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/display/" + uniqueFileName, mediaType);
+            // Process each file in the request
+            for (MultipartFile file : displayRequest.getFiles()) {
+                if (file.isEmpty()) {
+                    throw new MBException("One of the files is empty");
+                }
 
-            // Add the media file to the display
-            display.getMediaFiles().add(mediaFile);
+                // Generate a unique file name
+                String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+
+                // Define the file path
+                Path filePath = Paths.get(displayPath, user.getUsername(), uniqueFileName);
+
+                // Ensure directories exist
+                Files.createDirectories(filePath.getParent());
+
+                // Write file to the directory
+                Files.write(filePath, file.getBytes());
+
+                // Determine media type and create MediaFile object
+                MediaType mediaType = utilService.determineMediaType(file);
+                MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/display/" + uniqueFileName, mediaType);
+
+                // Add the media file to the display
+                display.getMediaFiles().add(mediaFile);
+            }
 
             // Update modified info
             display.setModifiedBy(user);
             display.setLastModifiedTime(LocalDateTime.now());
+
+            // Save the display to the database
             displayRepository.save(display);
+
             // Generate salt and hashed PIN for the display
             String hashedPin = displayPinService.generateUniqueDisplayPin(display.getId()); // Generate hashed pin
 
             // Set the hashed pin and salt in the display
             display.setDisplayPin(hashedPin);
 
-            // Save the display to the database
+            // Save the display to the database after generating the pin
             displayRepository.save(display);
 
-            // Set flow data with display ID and file name
-            flow.setData(Map.of("displayId", display.getId(), "fileName", uniqueFileName));
+            // Set flow data with display ID and file names
+            List<String> fileNames = displayRequest.getFiles().stream()
+                    .map(file -> UUID.randomUUID().toString() + "_" + file.getOriginalFilename())
+                    .collect(Collectors.toList());
+            flow.setData("Display dsaved successfully !");
 
         } catch (IOException e) {
-            throw new MBException("Failed to save file or generate hashed pin", e);
+            throw new MBException("Failed to save files or generate hashed pin", e);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Error generating hashed pin or salt", e);
         } catch (Exception e) {
@@ -357,7 +375,8 @@ public class DisplayService {
             return new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), display.getCreatedTime(), display.getStatus().toString(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // latitude
                     display.getLocation() != null ? display.getLocation()[1] : 0.0, // longitude
                     boardIds,
-                    display.getDisplayPin()
+                    display.getDisplayPin(),
+                    display.getPrice()
             );
         }).collect(Collectors.toList());
 
@@ -379,7 +398,8 @@ public class DisplayService {
                 display.getCreatedTime(), display.getStatus().name(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // Latitude
                 display.getLocation() != null ? display.getLocation()[1] : 0.0, // Longitude
                 boardIds,
-                display.getDisplayPin()
+                display.getDisplayPin(),
+                display.getPrice()
         ));
     }
 

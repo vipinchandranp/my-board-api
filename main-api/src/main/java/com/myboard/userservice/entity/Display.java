@@ -45,4 +45,24 @@ public class Display extends Base {
 
     private String displayPin;
 
+    private Double price;
+
+
+    // Added setters for latitude and longitude
+    public void setLatitude(Double latitude) {
+        if (latitude != null && this.location != null) {
+            this.location[0] = latitude;  // Assuming location[0] is latitude
+        }
+    }
+
+    public void setLongitude(Double longitude) {
+        if (longitude != null && this.location != null) {
+            this.location[1] = longitude;  // Assuming location[1] is longitude
+        }
+    }
+
+    public void setLocation(Double latitude, Double longitude) {
+        this.location = new double[] {latitude, longitude};
+    }
+
 }
