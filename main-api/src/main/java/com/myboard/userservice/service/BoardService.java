@@ -1,18 +1,16 @@
 package com.myboard.userservice.service;
 
 import com.myboard.userservice.controller.model.board.request.BoardApprovalRequest;
-import com.myboard.userservice.controller.model.board.request.BoardGetBoardsRequest;
 import com.myboard.userservice.controller.model.board.request.BoardGetRequest;
 import com.myboard.userservice.controller.model.board.response.BoardGetBoardsByIdResponse;
 import com.myboard.userservice.controller.model.common.AbstractFilterRequest;
+import com.myboard.userservice.controller.model.common.CommentResponse;
 import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.controller.model.common.WorkFlow;
-import com.myboard.userservice.entity.Board;
-import com.myboard.userservice.entity.Notification;
-import com.myboard.userservice.entity.Timeslot;
-import com.myboard.userservice.entity.User;
+import com.myboard.userservice.entity.*;
 import com.myboard.userservice.exception.MBException;
 import com.myboard.userservice.repository.*;
+import com.myboard.userservice.types.ItemType;
 import com.myboard.userservice.types.MediaType;
 import com.myboard.userservice.types.NotificationType;
 import com.myboard.userservice.types.StatusType;
@@ -72,6 +70,84 @@ public class BoardService {
 
     @Autowired
     private CommonFilteredMongoRepository<Board> filteredMongoRepository;
+
+    @Autowired
+    private RatingRepository ratingRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    public void addRating(String boardId, double ratingValue) throws MBException {
+        // Fetch the board by its ID
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new MBException("Board not found"));
+
+        // Get the logged-in user (assumes you have a service for fetching user details)
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
+
+        // Check if the user has already rated this board
+        Rating existingRating = board.getRatings().stream()
+                .filter(rating -> rating != null && rating.getRatedBy() != null && rating.getRatedBy().getId().equals(loggedInUser.getId()))
+                .findFirst()
+                .orElse(null);
+
+        // If the user has already rated, update the existing rating
+        if (existingRating != null) {
+            // Remove the old rating from the board's ratings list
+            board.getRatings().remove(existingRating);
+
+            // Update the existing rating's value and timestamp
+            existingRating.setValue(ratingValue);
+            existingRating.setTimestamp(System.currentTimeMillis());
+
+            // Save the updated rating to the ratings table (repository)
+            ratingRepository.save(existingRating);
+
+            // Add the updated rating back to the board's ratings list
+            board.getRatings().add(existingRating);
+        } else {
+            // If no existing rating, create a new rating
+            Rating newRating = Rating.builder()
+                    .itemType(ItemType.BOARD)    // Set the itemType to BOARD
+                    .itemID(boardId)             // Set the itemID to the board's ID
+                    .ratedBy(loggedInUser)       // Set the ratedBy field to the logged-in user object
+                    .value(ratingValue)          // Set the rating value
+                    .timestamp(System.currentTimeMillis())  // Set the timestamp of the rating
+                    .build();
+
+            // Save the new rating to the ratings table (repository)
+            ratingRepository.save(newRating);
+
+            // Add the new rating to the board's ratings list
+            board.getRatings().add(newRating);
+        }
+
+        // Save the updated board with the new/updated rating
+        boardRepository.save(board);
+
+        // Add information to the flow (assuming 'flow' is a logger or some information store)
+        flow.addInfo("Rating added successfully to the board");
+    }
+
+    public String addComment(String boardId, String commentText) throws MBException {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new MBException("Board not found"));
+
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
+
+        Comment comment = Comment.builder()
+                .commentedBy(loggedInUser.getId())
+                .content(commentText)
+                .itemID(boardId)
+                .itemType(ItemType.DISPLAY)
+                .build();
+
+        commentRepository.save(comment);
+
+        board.getComments().add(comment);
+        boardRepository.save(board);
+        return comment.getId();
+    }
 
 
     public void approveBoard(BoardApprovalRequest boardApprovalStatusRequest) {
@@ -265,6 +341,74 @@ public class BoardService {
         Notification notification = new Notification();
         notification.setNotificationType(NotificationType.BOARD_STATUS_CHANGED);
         notificationRepository.save(notification);
+    }
+
+
+    public List<CommentResponse> getBoardComments(String boardId) throws MBException {
+
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        // Fetch the display from the repository
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new MBException("Board not found"));
+
+        List<Comment> comments = board.getComments()
+                .stream()
+                .sorted(Comparator.comparing(Comment::getCreatedTime, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+
+
+        // Transform comments into the response format with profile pictures
+        return comments.stream().map(comment -> {
+            return new CommentResponse(
+                    comment.getId(),
+                    comment.getContent(),
+                    comment.getCreatedTime(),
+                    user.getProfilePicName(),
+                    user.getUsername()
+            );
+        }).collect(Collectors.toList());
+    }
+
+    public void likeBoard(String boardId) throws MBException {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new MBException("Board not found"));
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        board.addLike(user);
+        boardRepository.save(board);
+    }
+
+    public void dislikeBoard(String boardId) throws MBException {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new MBException("Board not found"));
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        board.addDislike(user);
+        boardRepository.save(board);
+    }
+
+    public void undoLikeBoard(String boardId) throws MBException {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new MBException("Board not found"));
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        board.removeLike(user);
+        boardRepository.save(board);
+    }
+
+    public void undoDislikeBoard(String boardId) throws MBException {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new MBException("Board not found"));
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        board.removeDislike(user);
+        boardRepository.save(board);
+    }
+
+    public Double getRating(String boardId) throws MBException {
+        // Fetch the board entity from the database
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new MBException("Board not found"));
+
+        // Return the rating associated with this display
+        // Assuming board has a 'getRating' method or a ratings field
+        return board.getAverageRating();  // or calculate the average rating if you have multiple ratings per display
     }
 
 }

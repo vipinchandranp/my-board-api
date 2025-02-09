@@ -1,11 +1,14 @@
 package com.myboard.userservice.entity;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.types.StatusType;
 import lombok.*;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @EqualsAndHashCode(callSuper = true)
@@ -18,12 +21,76 @@ public class Board extends Base {
 
     private String name;
 
-    private List<Rating> ratings = new ArrayList<>();
+    private List<Rating> ratings = new ArrayList<>(); // List to hold ratings for the board
 
-    private List<Comment> comments = new ArrayList<>();
+    private List<Comment> comments = new ArrayList<>(); // List to hold comments for the board
 
     private List<MediaFile> mediaFiles = new ArrayList<>();
 
     private StatusType status = StatusType.WAITING_FOR_APPROVAL;
 
+    // New fields to maintain who liked/disliked the display
+    @DBRef(lazy = true)
+    private Set<User> likedBy = new HashSet<>(); // Users who liked this display
+
+    @DBRef(lazy = true)
+    private Set<User> dislikedBy = new HashSet<>(); // Users who disliked this display
+
+    private int likes = 0;     // Added field for likes
+
+    private int dislikes = 0;  // Added field for dislikes
+
+    // Methods to manage likes
+    public void addLike(User user) {
+        if (!likedBy.contains(user)) {
+            likedBy.add(user);
+            likes++;
+            dislikedBy.remove(user); // Remove the user from dislikedBy if they previously disliked
+            dislikes = Math.max(0, dislikes - 1); // Ensure dislikes do not go negative
+        }
+    }
+
+    public void removeLike(User user) {
+        if (likedBy.remove(user)) {
+            likes = Math.max(0, likes - 1); // Ensure likes do not go negative
+        }
+    }
+
+    public void addDislike(User user) {
+        if (!dislikedBy.contains(user)) {
+            dislikedBy.add(user);
+            dislikes++;
+            likedBy.remove(user); // Remove the user from likedBy if they previously liked
+            likes = Math.max(0, likes - 1); // Ensure likes do not go negative
+        }
+    }
+
+    public void removeDislike(User user) {
+        if (dislikedBy.remove(user)) {
+            dislikes = Math.max(0, dislikes - 1); // Ensure dislikes do not go negative
+        }
+    }
+
+    // Methods to manage ratings
+    public void addRating(Rating rating) {
+        // Check if the user has already rated the same item (board)
+        if (ratings.stream().noneMatch(r -> r.getRatedBy().equals(rating.getRatedBy()))) {
+            ratings.add(rating); // Add new rating
+        } else {
+            // Replace existing rating from the same user
+            ratings.replaceAll(r -> r.getRatedBy().equals(rating.getRatedBy()) ? rating : r);
+        }
+    }
+
+    public void removeRating(User user) {
+        ratings.removeIf(r -> r.getRatedBy().equals(user)); // Remove rating by the user
+    }
+
+    // Calculate average rating
+    public double getAverageRating() {
+        if (ratings.isEmpty()) {
+            return 0.0;
+        }
+        return ratings.stream().mapToDouble(Rating::getValue).average().orElse(0.0);
+    }
 }

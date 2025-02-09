@@ -1,10 +1,7 @@
 package com.myboard.userservice.service;
 
 import com.myboard.userservice.controller.model.board.request.DisplayApprovalRequest;
-import com.myboard.userservice.controller.model.common.AbstractFilterRequest;
-import com.myboard.userservice.controller.model.common.MediaFile;
-import com.myboard.userservice.controller.model.common.TimeslotRequest;
-import com.myboard.userservice.controller.model.common.WorkFlow;
+import com.myboard.userservice.controller.model.common.*;
 import com.myboard.userservice.controller.model.display.request.*;
 import com.myboard.userservice.controller.model.display.response.CurrentlyPlayingBoardsResponse;
 import com.myboard.userservice.controller.model.display.response.DisplayGetDisplaysIdNameLocationResponse;
@@ -12,9 +9,8 @@ import com.myboard.userservice.controller.model.display.response.DisplayGetDispl
 import com.myboard.userservice.controller.model.display.response.DisplayGetTimeSlotsResponse;
 import com.myboard.userservice.entity.*;
 import com.myboard.userservice.exception.MBException;
-import com.myboard.userservice.repository.BoardRepository;
-import com.myboard.userservice.repository.DisplayRepository;
-import com.myboard.userservice.repository.TimeslotRepository;
+import com.myboard.userservice.repository.*;
+import com.myboard.userservice.types.ItemType;
 import com.myboard.userservice.types.MediaType;
 import com.myboard.userservice.types.PlayMode;
 import com.myboard.userservice.types.StatusType;
@@ -39,6 +35,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class DisplayService {
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private PinService displayPinService;
@@ -78,6 +77,83 @@ public class DisplayService {
     @Autowired
     private NSWCheckService nswCheckService;
 
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private RatingRepository ratingRepository;
+    public void addRating(String displayId, double ratingValue) throws MBException {
+        // Fetch the display by its ID
+        Display display = displayRepository.findById(displayId)
+                .orElseThrow(() -> new MBException("Display not found"));
+
+        // Get the logged-in user (assumes you have a service for fetching user details)
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
+
+        // Check if the user has already rated this display
+        Rating existingRating = display.getRatings().stream()
+                .filter(rating -> rating != null && rating.getRatedBy() != null && rating.getRatedBy().getId().equals(loggedInUser.getId()))
+                .findFirst()
+                .orElse(null);
+
+        // If the user has already rated, update the existing rating
+        if (existingRating != null) {
+            // Remove the old rating from the display's ratings list
+            display.getRatings().remove(existingRating);
+
+            // Update the existing rating's value and timestamp
+            existingRating.setValue(ratingValue);
+            existingRating.setTimestamp(System.currentTimeMillis());
+
+            // Save the updated rating to the ratings table (repository)
+            ratingRepository.save(existingRating);
+
+            // Add the updated rating back to the display's ratings list
+            display.getRatings().add(existingRating);
+        } else {
+            // If no existing rating, create a new rating
+            Rating newRating = Rating.builder()
+                    .itemType(ItemType.DISPLAY)    // Set the itemType to DISPLAY
+                    .itemID(displayId)             // Set the itemID to the display's ID
+                    .ratedBy(loggedInUser)         // Set the ratedBy field to the logged-in user object
+                    .value(ratingValue)            // Set the rating value
+                    .timestamp(System.currentTimeMillis())  // Set the timestamp of the rating
+                    .build();
+
+            // Save the new rating to the ratings table (repository)
+            ratingRepository.save(newRating);
+
+            // Add the new rating to the display's ratings list
+            display.getRatings().add(newRating);
+        }
+
+        // Save the updated display with the new/updated rating
+        displayRepository.save(display);
+
+        // Add information to the flow (assuming 'flow' is a logger or some information store)
+        flow.addInfo("Rating added successfully to the display");
+    }
+
+
+    public String addComment(String displayId, String commentText) throws MBException {
+        Display display = displayRepository.findById(displayId)
+                .orElseThrow(() -> new MBException("Display not found"));
+
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
+
+        Comment comment = Comment.builder()
+                .commentedBy(loggedInUser.getId())
+                .content(commentText)
+                .itemID(displayId)
+                .itemType(ItemType.DISPLAY)
+                .build();
+
+        commentRepository.save(comment);
+
+        display.getComments().add(comment);
+        displayRepository.save(display);
+        return comment.getId();
+    }
 
     // Handle display approval
     public void handleDisplayApproval(DisplayApprovalRequest displayApprovalRequest) {
@@ -212,7 +288,7 @@ public class DisplayService {
             // Get logged-in user
             User user = mbUserDetailsService.getLoggedInUser();
 
-            // Retrieve or create the display
+// Retrieve or create the display
             Display display = displayRepository.findByName(displayRequest.getDisplayName()).orElseGet(() -> {
                 Display newDisplay = new Display();
                 newDisplay.setName(displayRequest.getDisplayName());
@@ -222,11 +298,15 @@ public class DisplayService {
                 newDisplay.setLatitude(displayRequest.getLatitude());
                 newDisplay.setLongitude(displayRequest.getLongitude());
 
+                // Alternatively, you can set both at once:
+                // newDisplay.setLocation(displayRequest.getLatitude(), displayRequest.getLongitude());
+
                 newDisplay.setCreatedBy(user);
                 newDisplay.setCreatedTime(LocalDateTime.now());
                 newDisplay.setMediaFiles(new ArrayList<>()); // Initialize mediaFiles list
                 return newDisplay;
             });
+
 
             // Process each file in the request
             for (MultipartFile file : displayRequest.getFiles()) {
@@ -274,7 +354,7 @@ public class DisplayService {
             List<String> fileNames = displayRequest.getFiles().stream()
                     .map(file -> UUID.randomUUID().toString() + "_" + file.getOriginalFilename())
                     .collect(Collectors.toList());
-            flow.setData("Display dsaved successfully !");
+            flow.setData("Display saved successfully !");
 
         } catch (IOException e) {
             throw new MBException("Failed to save files or generate hashed pin", e);
@@ -411,7 +491,8 @@ public class DisplayService {
             throw new MBException("Display not found");
         }
         // Update the display location
-        display.setLocation(new double[]{geoTagRequest.getLatitude(), geoTagRequest.getLongitude()});
+        display.setLatitude(geoTagRequest.getLatitude());
+        display.setLongitude(geoTagRequest.getLongitude());
         displayRepository.save(display);
         flow.addInfo("Geo-tagging successful");
     }
@@ -555,5 +636,70 @@ public class DisplayService {
         return response;
     }
 
+    public List<CommentResponse> getDisplayComments(String displayId) throws MBException {
+        // Fetch the display from the repository
+        Display display = displayRepository.findById(displayId)
+                .orElseThrow(() -> new MBException("Display not found"));
+
+        List<Comment> comments = display.getComments()
+                .stream()
+                .sorted(Comparator.comparing(Comment::getCreatedTime, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+
+
+        // Transform comments into the response format with profile pictures
+        return comments.stream().map(comment -> {
+            User user = userRepository.findById(comment.getCommentedBy())
+                    .orElseThrow(() -> new MBException("User not found"));
+            return new CommentResponse(
+                    comment.getId(),
+                    comment.getContent(),
+                    comment.getCreatedTime(),
+                    user.getProfilePicName(),
+                    user.getUsername()
+            );
+        }).collect(Collectors.toList());
+    }
+
+    public void likeDisplay(String displayId) throws MBException {
+        Display display = displayRepository.findById(displayId).orElseThrow(() -> new MBException("Display not found"));
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        display.addLike(user);
+        displayRepository.save(display);
+    }
+
+    public void dislikeDisplay(String displayId) throws MBException {
+        Display display = displayRepository.findById(displayId).orElseThrow(() -> new MBException("Display not found"));
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        display.addDislike(user);
+        displayRepository.save(display);
+    }
+
+    public void undoLikeDisplay(String displayId) throws MBException {
+        Display display = displayRepository.findById(displayId).orElseThrow(() -> new MBException("Display not found"));
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        display.removeLike(user);
+        displayRepository.save(display);
+    }
+
+    public void undoDislikeDisplay(String displayId) throws MBException {
+        Display display = displayRepository.findById(displayId).orElseThrow(() -> new MBException("Display not found"));
+        User user = mbUserDetailsService.getLoggedInUser();
+
+        display.removeDislike(user);
+        displayRepository.save(display);
+    }
+
+    public Double getRating(String displayId) throws MBException {
+        // Fetch the display entity from the database
+        Display display = displayRepository.findById(displayId).orElseThrow(() -> new MBException("Display not found"));
+
+        // Return the rating associated with this display
+        // Assuming display has a 'getRating' method or a ratings field
+        return display.getAverageRating();  // or calculate the average rating if you have multiple ratings per display
+    }
 
 }

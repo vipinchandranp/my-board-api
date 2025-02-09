@@ -3,6 +3,8 @@ package com.myboard.userservice.controller;
 import com.myboard.userservice.controller.model.board.request.BoardGetBoardsRequest;
 import com.myboard.userservice.controller.model.board.request.DisplayApprovalRequest;
 import com.myboard.userservice.controller.model.board.response.BoardGetBoardsResponse;
+import com.myboard.userservice.controller.model.common.CommentRequest;
+import com.myboard.userservice.controller.model.common.CommentResponse;
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.common.WorkFlow;
 import com.myboard.userservice.controller.model.display.request.*;
@@ -178,9 +180,86 @@ public class DisplayController extends BaseController {
         List<DisplayGetDisplaysIdNameLocationResponse> getAllDisplays = displayService.getAllDisplays();
         return new MainResponse<>(getAllDisplays);
     }
+
     @GetMapping("/boards/status/{displayId}")
     public MainResponse<CurrentlyPlayingBoardsResponse> getBoardStatusByDisplayId(@PathVariable String displayId) throws MBException {
         CurrentlyPlayingBoardsResponse response = displayService.getBoardStatus(displayId);
         return new MainResponse<>(response);
     }
+
+
+    // Endpoint to add a rating to a board
+    @PostMapping("/{displayId}/rating")
+    public MainResponse<String> addRating(@PathVariable String displayId, @RequestParam double rating) throws MBException {
+        displayService.addRating(displayId, rating);
+        return buildResponse("Rating added successfully");
+    }
+
+    // Endpoint to get the rating of a display
+    @GetMapping("/{displayId}/rating")
+    public MainResponse<Double> getRating(@PathVariable String displayId) throws MBException {
+        // Call the service to get the rating of the display
+        Double rating = displayService.getRating(displayId);
+        // Return the rating wrapped in the MainResponse
+        return buildResponse(rating);
+    }
+
+
+    // Modified controller to accept comment text in request body
+    @PostMapping("/{displayId}/comment")
+    public MainResponse<String> addComment(
+            @PathVariable String displayId,
+            @RequestBody CommentRequest commentRequest) throws MBException {
+
+        // Access the comment text from the request body
+        String commentText = commentRequest.getCommentText();
+
+        // Call service to add the comment (using displayId and commentText)
+        String commentId = displayService.addComment(displayId, commentText);
+
+        return buildResponse(commentId);  // Return the response with the comment ID
+    }
+
+
+    @GetMapping("/{displayId}/comments")
+    public MainResponse<List<CommentResponse>> getCommentsForDisplay(@PathVariable String displayId) throws MBException {
+        // Fetch comments with user profile details from the service
+        List<CommentResponse> comments = displayService.getDisplayComments(displayId);
+        // Return the response encapsulated in MainResponse
+        return new MainResponse<>(comments);
+    }
+
+    // Endpoint to like a display
+    @PostMapping("/like/{displayId}")
+    public MainResponse<String> likeDisplay(@PathVariable String displayId) throws MBException {
+        // Call the service layer to handle the "like" action
+        displayService.likeDisplay(displayId);
+        return buildResponse("Display liked successfully");
+    }
+
+    // Endpoint to dislike a display
+    @PostMapping("/dislike/{displayId}")
+    public MainResponse<String> dislikeDisplay(@PathVariable String displayId) throws MBException {
+        // Call the service layer to handle the "dislike" action
+        displayService.dislikeDisplay(displayId);
+        return buildResponse("Display disliked successfully");
+    }
+    @PostMapping("/undo-like/{displayId}")
+    public MainResponse<String> undoLikeDisplay(@PathVariable String displayId) throws MBException {
+        // Call the service layer to handle the "undo like" action
+        displayService.undoLikeDisplay(displayId);
+        return buildResponse("Like removed successfully");
+    }
+
+    // Endpoint to undo a dislike on a display
+    @PostMapping("/undo-dislike/{displayId}")
+    public MainResponse<String> undoDislikeDisplay(@PathVariable String displayId) throws MBException {
+        // Call the service layer to handle the "undo dislike" action
+        displayService.undoDislikeDisplay(displayId);
+        return buildResponse("Dislike removed successfully");
+    }
+
+
+
+
 }
