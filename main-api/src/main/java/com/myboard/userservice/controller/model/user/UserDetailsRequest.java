@@ -18,7 +18,7 @@ public class UserDetailsRequest {
     private String email;
     private String firstName;
     private String lastName;
-    private Integer phone;
+    private Long phone;
     private String address;
     private String profilePicName;
 }

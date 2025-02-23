@@ -26,6 +26,9 @@ public class Timeslot extends Base {
     @DBRef(lazy = true)
     private Board board; // Reference to the associated board
 
+    @DBRef
+    private Payment payment;
+
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime startTime; // Start time of the timeslot
 

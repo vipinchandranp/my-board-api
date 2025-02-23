@@ -274,9 +274,15 @@ public class DisplayService {
     }
 
     public Page<Display> getFilteredDisplays(AbstractFilterRequest filterRequest, Pageable pageable) {
-        User createdBy = mbUserDetailsService.getLoggedInUser();
-        filterRequest.setCreatedBy(createdBy);
-        return displayRepository.findAllByFilter(filterRequest, Display.class, pageable);
+        User loggedInUser = mbUserDetailsService.getLoggedInUser(); // Get the logged-in user
+        filterRequest.setCreatedBy(loggedInUser);
+
+        Page<Display> displayPage = displayRepository.findAllByFilter(filterRequest, Display.class, pageable);
+
+        // Update transient properties for each display
+        displayPage.forEach(display -> display.updateUserReaction(loggedInUser));
+
+        return displayPage;
     }
 
     public void saveDisplay(DisplaySaveRequest displayRequest) {
@@ -442,22 +448,28 @@ public class DisplayService {
         }
     }
 
-    // Get a paginated list of displays
     public List<DisplayGetDisplaysResponse> getDisplays(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Display> displayPage = displayRepository.findAll(pageable);
 
         List<DisplayGetDisplaysResponse> displays = displayPage.getContent().stream().map(display -> {
             // Extract board IDs from the associated boards
-            List<String> boardIds = display.getBoards().stream().map(Board::getId) // Assuming Board class has a getId() method
+            List<String> boardIds = display.getBoards().stream()
+                    .map(Board::getId)
                     .collect(Collectors.toList());
 
-            return new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), display.getCreatedTime(), display.getStatus().toString(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // latitude
-                    display.getLocation() != null ? display.getLocation()[1] : 0.0, // longitude
-                    boardIds,
-                    display.getDisplayPin(),
-                    display.getPrice()
-            );
+            return DisplayGetDisplaysResponse.builder()
+                    .displayId(display.getId())
+                    .displayName(display.getName())
+                    .mediaFiles(display.getMediaFiles())
+                    .createdDateAndTime(display.getCreatedTime())
+                    .status(display.getStatus().toString())
+                    .latitude(display.getLocation() != null ? display.getLocation()[0] : 0.0)
+                    .longitude(display.getLocation() != null ? display.getLocation()[1] : 0.0)
+                    .boardIds(boardIds)
+                    .displayPin(display.getDisplayPin())
+                    .price(display.getPrice())
+                    .build();
         }).collect(Collectors.toList());
 
         flow.setData(displays);
@@ -465,23 +477,32 @@ public class DisplayService {
         return displays;
     }
 
-
     // Get a display by ID, including media files and associated board IDs
     public void getDisplayById(String displayId) {
-        Display display = displayRepository.findById(displayId).orElseThrow(() -> new MBException("Display not found"));
+        Display display = displayRepository.findById(displayId)
+                .orElseThrow(() -> new MBException("Display not found"));
 
         // Extract board IDs from the associated boards
-        List<String> boardIds = display.getBoards().stream().map(Board::getId) // Assuming Board class has a getId() method
+        List<String> boardIds = display.getBoards().stream()
+                .map(Board::getId)
                 .collect(Collectors.toList());
 
-        flow.setData(new DisplayGetDisplaysResponse(display.getId(), display.getName(), display.getMediaFiles(), // Include mediaFiles here
-                display.getCreatedTime(), display.getStatus().name(), display.getLocation() != null ? display.getLocation()[0] : 0.0, // Latitude
-                display.getLocation() != null ? display.getLocation()[1] : 0.0, // Longitude
-                boardIds,
-                display.getDisplayPin(),
-                display.getPrice()
-        ));
+        DisplayGetDisplaysResponse response = DisplayGetDisplaysResponse.builder()
+                .displayId(display.getId())
+                .displayName(display.getName())
+                .mediaFiles(display.getMediaFiles())
+                .createdDateAndTime(display.getCreatedTime())
+                .status(display.getStatus().name())
+                .latitude(display.getLocation() != null ? display.getLocation()[0] : 0.0)
+                .longitude(display.getLocation() != null ? display.getLocation()[1] : 0.0)
+                .boardIds(boardIds)
+                .displayPin(display.getDisplayPin())
+                .price(display.getPrice())
+                .build();
+
+        flow.setData(response);
     }
+
 
 
     public void geoTag(DisplayGeoTagRequest geoTagRequest) throws MBException {
@@ -701,5 +722,24 @@ public class DisplayService {
         // Assuming display has a 'getRating' method or a ratings field
         return display.getAverageRating();  // or calculate the average rating if you have multiple ratings per display
     }
+
+    public Integer getNumberOfLikes(String displayId) throws MBException {
+        // Fetch the display entity from the database
+        Display display = displayRepository.findById(displayId)
+                .orElseThrow(() -> new MBException("Display not found"));
+
+        // Assuming display.getLikes() returns a collection of likes
+        return display.getNumberOfLikes();
+    }
+
+    public Integer getNumberOfDisLikes(String displayId) throws MBException {
+        // Fetch the display entity from the database
+        Display display = displayRepository.findById(displayId)
+                .orElseThrow(() -> new MBException("Display not found"));
+
+        // Assuming display.getLikes() returns a collection of likes
+        return display.getNumberOfDislikes();
+    }
+
 
 }

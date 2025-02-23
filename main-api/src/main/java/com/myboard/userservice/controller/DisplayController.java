@@ -27,6 +27,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 @RestController
 @CrossOrigin
 @RequestMapping("/display")
@@ -129,31 +131,35 @@ public class DisplayController extends BaseController {
         return buildResponse();
     }
 
-
     @GetMapping("/list")
     public MainResponse<List<DisplayGetDisplaysResponse>> getDisplays(DisplayGetDisplaysRequest request) throws MBException {
         // Get the paginated and filtered list of displays from the service
         Page<Display> displaysPage = displayService.getFilteredDisplays(request, PageRequest.of(request.getPage(), request.getSize()));
 
-        // Map the Page<Display> to the response model
+        // Map the Page<Display> to the response model using the builder
         List<DisplayGetDisplaysResponse> displayResponses = displaysPage.getContent().stream()
-                .map(display -> new DisplayGetDisplaysResponse(
-                        display.getId(), // Assuming getId() gives the display ID
-                        display.getName(),
-                        display.getMediaFiles(),
-                        display.getCreatedTime(),
-                        display.getStatus().name(), // Convert enum to string
-                        display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[0] : 0.0, // Latitude
-                        display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[1] : 0.0, // Longitude
-                        display.getBoards().stream().map(board -> board.getId()).collect(Collectors.toList()), // Collect board IDs
-                        display.getDisplayPin(),
-                        display.getPrice()
-                )) // Mapping Display entity to DisplayGetDisplaysResponse
-                .collect(Collectors.toList());
+                .map(display -> DisplayGetDisplaysResponse.builder()
+                        .displayId(display.getId()) // Assuming getId() gives the display ID
+                        .displayName(display.getName())
+                        .mediaFiles(display.getMediaFiles())
+                        .createdDateAndTime(display.getCreatedTime())
+                        .status(display.getStatus().name()) // Convert enum to string
+                        .latitude(display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[0] : 0.0) // Latitude
+                        .longitude(display.getLocation() != null && display.getLocation().length == 2 ? display.getLocation()[1] : 0.0) // Longitude
+                        .boardIds(display.getBoards().stream().map(board -> board.getId()).collect(toList())) // Collect board IDs
+                        .displayPin(display.getDisplayPin())
+                        .price(display.getPrice())
+                        .likedByCurrentUser(display.isLikedByCurrentUser())
+                        .dislikedByCurrentUser(display.isDislikedByCurrentUser())
+                        .numberOfLikes(display.getNumberOfLikes())
+                        .numberOfDislikes(display.getNumberOfDislikes())
+                        .build())
+                .collect(toList());
 
         // Build and return the response with pagination data
         return buildResponse(displayResponses, displaysPage.getTotalElements(), displaysPage.getTotalPages(), displaysPage.getNumber());
     }
+
 
 
     @GetMapping("/{displayId}")
@@ -259,7 +265,17 @@ public class DisplayController extends BaseController {
         return buildResponse("Dislike removed successfully");
     }
 
+    @GetMapping("/{displayId}/likes")
+    public MainResponse<Integer> getNumberOfLikesForDisplay(@PathVariable String displayId) throws MBException {
+        Integer numberOfLikes = displayService.getNumberOfLikes(displayId);
+        return buildResponse(numberOfLikes);
+    }
 
+    @GetMapping("/{displayId}/dislikes")
+    public MainResponse<Integer> getNumberOfDisLikesForBoard(@PathVariable String displayId) throws MBException {
+        Integer numberOfDisLikes = displayService.getNumberOfDisLikes(displayId);
+        return buildResponse(numberOfDisLikes);
+    }
 
 
 }

@@ -87,8 +87,8 @@ public class UserController extends BaseController {
         }
     }
 
-    @PutMapping("/update")
-    public MainResponse<Void> updateUserDetails(@RequestBody UserDetailsRequest userDetailsRequest) throws MBException {
+    @PutMapping("/save-or-update")
+    public MainResponse<Void> saveOrUpdateUserDetails(@RequestBody UserDetailsRequest userDetailsRequest) throws MBException {
         userService.updateUserDetails(userDetailsRequest);
         return new MainResponse<>(flow);
     }
@@ -105,5 +105,10 @@ public class UserController extends BaseController {
         return buildResponse(userLocation);
     }
 
+    @GetMapping("/profile-details")
+    public MainResponse<UserProfileResponse> getUserProfileDetails() throws MBException {
+        UserProfileResponse profileDetails = userService.getUserProfileDetails();
+        return buildResponse(profileDetails);
+    }
 
 }

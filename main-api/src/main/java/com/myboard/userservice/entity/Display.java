@@ -2,8 +2,7 @@ package com.myboard.userservice.entity;
 
 import com.myboard.userservice.controller.model.common.MediaFile;
 import com.myboard.userservice.types.StatusType;
-import jakarta.persistence.PostPersist;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.Transient;
 import lombok.*;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
@@ -46,6 +45,12 @@ public class Display extends Base {
 
     private Double price;
 
+    @Transient
+    private boolean likedByCurrentUser = false;
+
+    @Transient
+    private boolean dislikedByCurrentUser = false;
+
     // Ensure location array is initialized before setting values
     public void setLatitude(Double latitude) {
         if (latitude != null) {
@@ -72,10 +77,6 @@ public class Display extends Base {
         }
     }
 
-    private int likes = 0;     // Added field for likes
-
-    private int dislikes = 0;  // Added field for dislikes
-
     // New fields to maintain who liked/disliked the display
     @DBRef(lazy = true)
     private Set<User> likedBy = new HashSet<>(); // Users who liked this display
@@ -83,40 +84,34 @@ public class Display extends Base {
     @DBRef(lazy = true)
     private Set<User> dislikedBy = new HashSet<>(); // Users who disliked this display
 
-    // Methods to manage likes
+    // Methods to manage likes/dislikes using sets for counts
     public void addLike(User user) {
         if (!likedBy.contains(user)) {
             likedBy.add(user);
-            likes++;
-            dislikedBy.remove(user); // Remove the user from dislikedBy if they previously disliked
-            dislikes = Math.max(0, dislikes - 1); // Ensure dislikes do not go negative
+            // If user was in dislikedBy, remove them
+            dislikedBy.remove(user);
         }
     }
 
     public void removeLike(User user) {
-        if (likedBy.remove(user)) {
-            likes = Math.max(0, likes - 1); // Ensure likes do not go negative
-        }
+        likedBy.remove(user);
     }
 
     public void addDislike(User user) {
         if (!dislikedBy.contains(user)) {
             dislikedBy.add(user);
-            dislikes++;
-            likedBy.remove(user); // Remove the user from likedBy if they previously liked
-            likes = Math.max(0, likes - 1); // Ensure likes do not go negative
+            // If user was in likedBy, remove them
+            likedBy.remove(user);
         }
     }
 
     public void removeDislike(User user) {
-        if (dislikedBy.remove(user)) {
-            dislikes = Math.max(0, dislikes - 1); // Ensure dislikes do not go negative
-        }
+        dislikedBy.remove(user);
     }
 
     // Methods to manage ratings
     public void addRating(Rating rating) {
-        // Check if the user has already rated the same item (display)
+        // Check if the user has already rated the display
         if (ratings.stream().noneMatch(r -> r.getRatedBy().equals(rating.getRatedBy()))) {
             ratings.add(rating); // Add new rating
         } else {
@@ -136,4 +131,30 @@ public class Display extends Base {
         }
         return ratings.stream().mapToDouble(Rating::getValue).average().orElse(0.0);
     }
+
+    // Get the number of likes directly from the likedBy set
+    public Integer getNumberOfLikes() {
+        return likedBy.size();
+    }
+
+    // Get the number of dislikes directly from the dislikedBy set
+    public Integer getNumberOfDislikes() {
+        return dislikedBy.size();
+    }
+
+    // Check if a specific user has liked or disliked the display
+    public boolean isLikedByUser(User user) {
+        return likedBy.contains(user);
+    }
+
+    public boolean isDislikedByUser(User user) {
+        return dislikedBy.contains(user);
+    }
+
+    public void updateUserReaction(User currentUser) {
+        this.likedByCurrentUser = isLikedByUser(currentUser);
+        this.dislikedByCurrentUser = isDislikedByUser(currentUser);
+    }
+
+
 }

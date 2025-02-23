@@ -218,4 +218,28 @@ public class UserService {
 
         return locationResponse;
     }
+
+    // New method: Get user profile details
+    public UserProfileResponse getUserProfileDetails() throws MBException {
+        // Retrieve the logged-in user
+        User user = mbUserDetailsService.getLoggedInUser();
+        if (user == null) {
+            throw new MBException("User not found");
+        }
+        UserProfileResponse response = new UserProfileResponse();
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setPhone(user.getPhone());
+        response.setAddress(user.getAddress());
+        response.setCityName(user.getCityName());
+        response.setProfilePicName(user.getProfilePicName());
+        double[] loc = user.getLocation();
+        if (loc != null && loc.length >= 2) {
+            response.setLatitude(loc[0]);
+            response.setLongitude(loc[1]);
+        }
+        return response;
+    }
 }

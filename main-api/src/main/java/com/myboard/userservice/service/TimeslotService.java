@@ -9,14 +9,13 @@ import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.myboard.userservice.controller.model.timeslot.request.TimeslotStatusRequest;
 import com.myboard.userservice.controller.model.timeslot.response.TimeSlotBoardToBePlayed;
 import com.myboard.userservice.controller.model.timeslot.response.TimeslotStatusResponse;
-import com.myboard.userservice.entity.Board;
-import com.myboard.userservice.entity.Display;
-import com.myboard.userservice.entity.Timeslot;
-import com.myboard.userservice.entity.User;
+import com.myboard.userservice.entity.*;
 import com.myboard.userservice.properties.TimeslotProperties;
 import com.myboard.userservice.repository.DisplayRepository;
+import com.myboard.userservice.repository.PaymentRepository;
 import com.myboard.userservice.repository.TimeslotRepository;
 import com.myboard.userservice.types.StatusType;
+import jakarta.transaction.Transactional;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -49,6 +48,9 @@ public class TimeslotService {
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     // Assuming you have a way to get the current date
     private LocalDateTime getCurrentDateTime() {
@@ -220,7 +222,8 @@ public class TimeslotService {
         query.addCriteria(Criteria.where("display.$id").is(new ObjectId(display.getId())))
                 .addCriteria(Criteria.where("startTime").lte(Date.from(currentTime)))
                 .addCriteria(Criteria.where("endTime").gte(Date.from(currentTime)))
-                .addCriteria(Criteria.where("status").is(StatusType.APPROVED));
+                .addCriteria(Criteria.where("status").is(StatusType.APPROVED))
+                .addCriteria(Criteria.where("paymentStatus").is(StatusType.PAYMENT_COMPLETED));
 
         // Execute the query
         Timeslot timeslot = mongoTemplate.findOne(query, Timeslot.class);
@@ -281,5 +284,87 @@ public class TimeslotService {
             return null;
         }
     }
+
+    public Timeslot updatePaymentDetails(String timeslotId, String paymentId) {
+        // Fetch the timeslot by ID
+        Optional<Timeslot> timeslotOptional = timeslotRepository.findById(timeslotId);
+        if (!timeslotOptional.isPresent()) {
+            throw new IllegalArgumentException("Timeslot not found with ID: " + timeslotId);
+        }
+
+        Timeslot timeslot = timeslotOptional.get();
+
+        // Fetch the payment by ID
+        Optional<Payment> paymentOptional = paymentRepository.findById(paymentId);
+        if (!paymentOptional.isPresent()) {
+            throw new IllegalArgumentException("Payment not found with ID: " + paymentId);
+        }
+
+        Payment payment = paymentOptional.get();
+
+        // Update the payment details for the timeslot
+        timeslot.setPayment(payment);
+
+        // Save the updated timeslot
+        return timeslotRepository.save(timeslot);
+    }
+
+    public boolean isPaymentCompleted(String timeslotId) {
+        // Fetch the timeslot by ID
+        Optional<Timeslot> timeslotOptional = timeslotRepository.findById(timeslotId);
+        if (!timeslotOptional.isPresent()) {
+            throw new IllegalArgumentException("Timeslot not found with ID: " + timeslotId);
+        }
+
+        Timeslot timeslot = timeslotOptional.get();
+
+        // Check if the timeslot has an associated payment
+        Payment payment = timeslot.getPayment();
+        if (payment == null) {
+            return false; // No payment associated
+        }
+
+        // Return true if the payment status is COMPLETED
+        return payment.getStatus() == StatusType.PAYMENT_COMPLETED;
+    }
+
+    public Timeslot saveTimeslot(Timeslot timeslot) {
+        if (timeslot == null) {
+            throw new IllegalArgumentException("Timeslot cannot be null");
+        }
+
+        // Ensure that the start time is before the end time
+        if (timeslot.getStartTime() == null || timeslot.getEndTime() == null) {
+            throw new IllegalArgumentException("Start time and end time cannot be null");
+        }
+        if (!timeslot.getStartTime().isBefore(timeslot.getEndTime())) {
+            throw new IllegalArgumentException("Start time must be before end time");
+        }
+
+        // Validate the display ID
+        if (timeslot.getDisplay() == null || timeslot.getDisplay().getId() == null) {
+            throw new IllegalArgumentException("Timeslot must be associated with a valid display");
+        }
+
+        // Convert LocalDateTime to Instant
+        Instant startTimeInstant = timeslot.getStartTime().toInstant(ZoneOffset.UTC);
+        Instant endTimeInstant = timeslot.getEndTime().toInstant(ZoneOffset.UTC);
+
+        // Check if the timeslot overlaps with an existing timeslot for the same display
+        List<Timeslot> overlappingTimeslots = timeslotRepository.findByDisplayAndTimeRange(
+                timeslot.getDisplay().getId(),
+                startTimeInstant,
+                endTimeInstant
+        );
+
+        if (!overlappingTimeslots.isEmpty()) {
+            throw new IllegalArgumentException("Timeslot overlaps with an existing timeslot");
+        }
+
+        // Save the new timeslot to the database
+        return timeslotRepository.save(timeslot);
+    }
+
+
 
 }

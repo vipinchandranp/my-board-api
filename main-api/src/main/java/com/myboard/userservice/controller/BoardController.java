@@ -58,14 +58,27 @@ public class BoardController extends BaseController {
         // Get the paginated and filtered list of boards from the service
         Page<Board> boardsPage = boardService.getFilteredBoards(request, PageRequest.of(request.getPage(), request.getSize()));
 
-        // Map the Page<Board> to the response model
+        // Map the Page<Board> to the response model using builder pattern
         List<BoardGetBoardsResponse> boardResponses = boardsPage.getContent().stream()
-                .map(board -> new BoardGetBoardsResponse(board)) // Assuming BoardGetBoardsResponse has a constructor that takes a Board entity
+                .map(board -> BoardGetBoardsResponse.builder()
+                        .boardId(board.getId())
+                        .boardName(board.getName())
+                        .createdDateAndTime(board.getCreatedTime())
+                        .mediaFiles(board.getMediaFiles())
+                        .status(board.getStatus().name()) // Convert enum to String
+                        // Include transient properties
+                        .likedByCurrentUser(board.isLikedByCurrentUser())
+                        .dislikedByCurrentUser(board.isDislikedByCurrentUser())
+                        // Include the count fields
+                        .numberOfLikes(board.getLikeCount())
+                        .numberOfDislikes(board.getDislikeCount())
+                        .build())
                 .collect(Collectors.toList());
 
         // Build and return the response with pagination data
         return buildResponse(boardResponses, boardsPage.getTotalElements(), boardsPage.getTotalPages(), boardsPage.getNumber());
     }
+
 
     @GetMapping("/{boardId}")
     public MainResponse<BoardGetBoardsResponse> getBoardById(@PathVariable String boardId) throws MBException {
@@ -157,6 +170,16 @@ public class BoardController extends BaseController {
         return buildResponse("Dislike removed successfully");
     }
 
+    @GetMapping("/{boardId}/likes")
+    public MainResponse<Integer> getNumberOfLikesForBoard(@PathVariable String boardId) throws MBException {
+        Integer numberOfLikes = boardService.getNumberOfLikes(boardId);
+        return buildResponse(numberOfLikes);
+    }
 
+    @GetMapping("/{boardId}/dislikes")
+    public MainResponse<Integer> getNumberOfDisLikesForBoard(@PathVariable String boardId) throws MBException {
+        Integer numberOfDisLikes = boardService.getNumberOfDisLikes(boardId);
+        return buildResponse(numberOfDisLikes);
+    }
 
 }

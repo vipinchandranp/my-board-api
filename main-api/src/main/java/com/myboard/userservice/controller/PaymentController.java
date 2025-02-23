@@ -58,4 +58,14 @@ public class PaymentController extends BaseController {
             throw new MBException("Error calculating price: " + e.getMessage());
         }
     }
+
+    @GetMapping("/is-completed/{transactionId}")
+    public MainResponse<Boolean> isPaymentCompleted(@PathVariable String transactionId) throws MBException {
+        try {
+            boolean isCompleted = paymentService.isPaymentCompleted(transactionId);
+            return buildResponse(isCompleted);
+        } catch (Exception e) {
+            throw new MBException("Error checking payment status: " + e.getMessage());
+        }
+    }
 }

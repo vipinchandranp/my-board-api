@@ -281,9 +281,14 @@ public class BoardService {
 
 
     public Page<Board> getFilteredBoards(AbstractFilterRequest filterRequest, Pageable pageable) {
-        User createdBy = mbUserDetailsService.getLoggedInUser();
-        filterRequest.setCreatedBy(createdBy);
-        return boardRepository.findAllByFilter(filterRequest, Board.class, pageable);
+        User loggedInUser = mbUserDetailsService.getLoggedInUser();
+        filterRequest.setCreatedBy(loggedInUser);
+        Page<Board> boardPage = boardRepository.findAllByFilter(filterRequest, Board.class, pageable);
+
+        // Update transient properties for each board (assuming Board has updateUserReaction)
+        boardPage.forEach(board -> board.updateUserReaction(loggedInUser));
+
+        return boardPage;
     }
 
     private Pageable createPageable(int page, int size) {
@@ -410,5 +415,25 @@ public class BoardService {
         // Assuming board has a 'getRating' method or a ratings field
         return board.getAverageRating();  // or calculate the average rating if you have multiple ratings per display
     }
+
+
+    public Integer getNumberOfLikes(String boardId) throws MBException {
+        // Fetch the display entity from the database
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new MBException("Board not found"));
+
+        // Assuming display.getLikes() returns a collection of likes
+        return board.getLikeCount();
+    }
+
+    public Integer getNumberOfDisLikes(String boardId) throws MBException {
+        // Fetch the display entity from the database
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new MBException("Board not found"));
+
+        // Assuming display.getLikes() returns a collection of likes
+        return board.getDislikeCount();
+    }
+
 
 }

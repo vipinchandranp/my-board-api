@@ -1,16 +1,17 @@
 package com.myboard.userservice.controller.model.board.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.myboard.userservice.entity.Board;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import com.myboard.userservice.controller.model.common.MediaFile;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
+@Builder
 public class BoardGetBoardsResponse {
     private String boardId;
     private String boardName;
@@ -21,12 +22,11 @@ public class BoardGetBoardsResponse {
 
     private String status;
 
-    // Optionally, you can add a constructor that accepts a Board entity to map from the Board entity to the response DTO
-    public BoardGetBoardsResponse(Board board) {
-        this.boardId = board.getId(); // Assuming Board entity has a method getId()
-        this.boardName = board.getName(); // Assuming Board entity has a method getName()
-        this.mediaFiles = board.getMediaFiles(); // Assuming Board entity has a method getMediaFiles()
-        this.createdDateAndTime = board.getCreatedTime(); // Assuming Board entity has a method getCreatedAt() returning LocalDateTime
-        this.status = board.getStatus().getValue(); // Assuming Board entity has a method getStatus()
-    }
+    // Transient properties indicating the user's reaction
+    private boolean likedByCurrentUser;
+    private boolean dislikedByCurrentUser;
+
+    // Fields for the number of likes and dislikes
+    private int numberOfLikes;
+    private int numberOfDislikes;
 }

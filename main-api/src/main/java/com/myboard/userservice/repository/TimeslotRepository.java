@@ -25,4 +25,6 @@ public interface TimeslotRepository extends MongoRepository<Timeslot, String> {
     // New method to find all timeslots associated with a list of Display entities
     List<Timeslot> findByDisplayIn(List<Display> displays);
 
+    @Query("{ 'displayId': ?0, 'startTime': { $lte: ?2 }, 'endTime': { $gte: ?1 } }")
+    List<Timeslot> findByDisplayAndTimeRange(String displayId, Instant startTime, Instant endTime);
 }
