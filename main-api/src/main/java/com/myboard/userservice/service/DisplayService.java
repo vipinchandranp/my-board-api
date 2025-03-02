@@ -20,6 +20,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.geo.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -429,7 +430,6 @@ public class DisplayService {
         }
     }
 
-    // Delete a display and its associated media
     public void deleteDisplay(String displayId) {
         Display display = displayRepository.findById(displayId).orElse(null);
         if (display == null) {
@@ -438,7 +438,14 @@ public class DisplayService {
         try {
             User loggedInUser = mbUserDetailsService.getLoggedInUser();
             for (MediaFile mediaFile : display.getMediaFiles()) {
-                Path mediaPath = Paths.get(displayPath, loggedInUser.getId().toString(), mediaFile.getFileName());
+                // Extract file name from the URL if necessary
+                String fileName = mediaFile.getFileName();
+                if (fileName.contains("/")) {
+                    fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+                }
+
+                // Construct the path using the extracted file name
+                Path mediaPath = Paths.get(displayPath, loggedInUser.getId().toString(), fileName);
                 Files.deleteIfExists(mediaPath);
             }
             displayRepository.deleteById(displayId);
@@ -545,15 +552,7 @@ public class DisplayService {
         if (userLocation == null || userLocation.length != 2) {
             throw new MBException("User location not set");
         }
-
-        // Get all displays from the repository
-        List<Display> allDisplays = displayRepository.findAll();
-
-        // Filter displays within the search radius
-        List<Display> nearbyDisplays = allDisplays.stream()
-                .filter(display -> display.getLocation() != null && display.getLocation().length == 2)
-                .filter(display -> isWithinRadius(userLocation, display.getLocation(), searchRadius))
-                .collect(Collectors.toList());
+        List<Display> nearbyDisplays = displayRepository.findNearbyDisplays(userLocation[0], userLocation[1], 600000);
 
         // Convert the nearby displays to the new response format
         List<DisplayGetDisplaysIdNameLocationResponse> response = nearbyDisplays.stream()

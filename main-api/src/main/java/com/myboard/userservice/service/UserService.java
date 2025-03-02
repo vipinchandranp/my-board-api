@@ -215,6 +215,7 @@ public class UserService {
         UserLocationResponse locationResponse = new UserLocationResponse();
         locationResponse.setLatitude(location[0]);
         locationResponse.setLongitude(location[1]);
+        locationResponse.setCityName(user.getCityName());
 
         return locationResponse;
     }

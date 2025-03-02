@@ -23,7 +23,7 @@ public class User implements UserDetails {
 
     @Id
     private String id;
-    private double[] location;
+    private double[] location; // latitude , longitude
     private String cityName;
     private String username;
     private String password;

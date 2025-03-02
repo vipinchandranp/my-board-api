@@ -40,7 +40,7 @@ public class DisplayController extends BaseController {
     @Autowired
     private WorkFlow flow;
 
-    @GetMapping("/delete/{id}")
+    @GetMapping("/delete/{displayId}")
     public MainResponse delete(@PathVariable String displayId) throws MBException, IOException {
         DisplayDeleteRequest displayDeleteRequest = new DisplayDeleteRequest();
         displayDeleteRequest.setDisplayId(displayId);
@@ -88,7 +88,7 @@ public class DisplayController extends BaseController {
 
     @PostMapping("/save")
     public MainResponse<String> saveDisplay(@RequestParam("displayName") String displayName,
-                                            @RequestParam("price") double price,
+                                            @RequestParam(value = "price", required = false) Double price,
                                             @RequestParam(value = "latitude", required = false) Double latitude,
                                             @RequestParam(value = "longitude", required = false) Double longitude,
                                             @RequestParam("files") List<MultipartFile> files) throws IOException {

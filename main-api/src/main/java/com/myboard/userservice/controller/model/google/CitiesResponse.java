@@ -1,4 +1,4 @@
-package com.myboard.userservice.controller.model.googlemap;
+package com.myboard.userservice.controller.model.google;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

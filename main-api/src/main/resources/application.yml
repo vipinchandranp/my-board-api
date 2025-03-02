@@ -57,7 +57,7 @@ spring.servlet.multipart.max-request-size: 50MB
 logging.level.root: INFO
 myboard:
   google:
-    apikey:
+    apikey: AIzaSyC-K51rMP63i_87vcj5OOx7B9NkY1EKuE4
     nswCheck: false
   user:
     profile-pic-path: C:/Users/vipin/development/myboard-uploaded-data/user/profile-pic

@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class UserLocationResponse {
     private double latitude;
     private double longitude;
+    private String cityName;
 }
