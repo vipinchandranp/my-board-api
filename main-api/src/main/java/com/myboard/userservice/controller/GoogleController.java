@@ -3,7 +3,7 @@ package com.myboard.userservice.controller;
 import com.myboard.userservice.controller.model.common.MainResponse;
 import com.myboard.userservice.controller.model.google.CitiesResponse;
 import com.myboard.userservice.exception.MBException;
-import com.myboard.userservice.service.GoogleService;
+import com.myboard.userservice.service.google.GoogleMapService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +15,7 @@ import java.util.List;
 public class GoogleController extends BaseController {
 
     @Autowired
-    private GoogleService googleService;
+    private GoogleMapService googleService;
 
     /**
      * Fetches cities based on the query provided by the user.

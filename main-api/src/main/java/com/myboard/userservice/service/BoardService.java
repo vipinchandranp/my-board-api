@@ -435,5 +435,10 @@ public class BoardService {
         return board.getDislikeCount();
     }
 
-
+    public Page<Board> getBoardsByName(String searchText, PageRequest pageRequest) {
+        if (searchText == null || searchText.isEmpty()) {
+            return boardRepository.findAll(pageRequest);
+        }
+        return boardRepository.findByNameContainingIgnoreCase(searchText, pageRequest);
+    }
 }

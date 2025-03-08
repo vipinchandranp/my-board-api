@@ -22,4 +22,5 @@ public interface BoardRepository extends MongoRepository<Board, String>, CommonF
 
     Page<Board> findAll(Pageable pageable); // Default pagination method
 
+    Page<Board> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }

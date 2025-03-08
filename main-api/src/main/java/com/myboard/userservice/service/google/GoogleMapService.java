@@ -1,4 +1,4 @@
-package com.myboard.userservice.service;
+package com.myboard.userservice.service.google;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class GoogleService {
+public class GoogleMapService {
 
     @Value("${myboard.google.api-key}")
     private String apiKey;

@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractFilterRequest {
+public class AbstractFilterRequest {
 
     // Filter data properties
     private String searchText;

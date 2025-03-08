@@ -284,9 +284,7 @@ public class DisplayService {
         displayPage.forEach(display -> display.updateUserReaction(loggedInUser));
 
         return displayPage;
-    }
-
-    public void saveDisplay(DisplaySaveRequest displayRequest) {
+    }public void saveDisplay(DisplaySaveRequest displayRequest) {
         if (displayRequest.getFiles().isEmpty()) {
             throw new MBException("Files are empty");
         }
@@ -295,25 +293,22 @@ public class DisplayService {
             // Get logged-in user
             User user = mbUserDetailsService.getLoggedInUser();
 
-// Retrieve or create the display
-            Display display = displayRepository.findByName(displayRequest.getDisplayName()).orElseGet(() -> {
-                Display newDisplay = new Display();
-                newDisplay.setName(displayRequest.getDisplayName());
-                newDisplay.setPrice(displayRequest.getPrice());  // Ensure the price is set
+            // Retrieve or create the display
+            Display display = displayRepository.findByName(displayRequest.getDisplayName())
+                    .orElseGet(() -> {
+                        Display newDisplay = new Display();
+                        newDisplay.setName(displayRequest.getDisplayName());
+                        newDisplay.setPrice(displayRequest.getPrice());  // Set the price
+                        newDisplay.setLatitude(displayRequest.getLatitude());
+                        newDisplay.setLongitude(displayRequest.getLongitude());
+                        newDisplay.setCreatedBy(user);
+                        newDisplay.setCreatedTime(LocalDateTime.now());
+                        newDisplay.setMediaFiles(new ArrayList<>()); // Initialize mediaFiles list
+                        return newDisplay;
+                    });
 
-                // Set latitude and longitude in the location array
-                newDisplay.setLatitude(displayRequest.getLatitude());
-                newDisplay.setLongitude(displayRequest.getLongitude());
-
-                // Alternatively, you can set both at once:
-                // newDisplay.setLocation(displayRequest.getLatitude(), displayRequest.getLongitude());
-
-                newDisplay.setCreatedBy(user);
-                newDisplay.setCreatedTime(LocalDateTime.now());
-                newDisplay.setMediaFiles(new ArrayList<>()); // Initialize mediaFiles list
-                return newDisplay;
-            });
-
+            // Clear existing media files to reset them
+            display.getMediaFiles().clear();
 
             // Process each file in the request
             for (MultipartFile file : displayRequest.getFiles()) {
@@ -335,7 +330,10 @@ public class DisplayService {
 
                 // Determine media type and create MediaFile object
                 MediaType mediaType = utilService.determineMediaType(file);
-                MediaFile mediaFile = new MediaFile("http://192.168.1.43:8080/myboard/file/display/" + uniqueFileName, mediaType);
+                MediaFile mediaFile = new MediaFile(
+                        "http://192.168.1.43:8080/myboard/file/display/" + uniqueFileName,
+                        mediaType
+                );
 
                 // Add the media file to the display
                 display.getMediaFiles().add(mediaFile);
@@ -351,26 +349,24 @@ public class DisplayService {
             // Generate salt and hashed PIN for the display
             String hashedPin = displayPinService.generateUniqueDisplayPin(display.getId()); // Generate hashed pin
 
-            // Set the hashed pin and salt in the display
+            // Set the hashed pin in the display
             display.setDisplayPin(hashedPin);
 
             // Save the display to the database after generating the pin
             displayRepository.save(display);
 
-            // Set flow data with display ID and file names
-            List<String> fileNames = displayRequest.getFiles().stream()
-                    .map(file -> UUID.randomUUID().toString() + "_" + file.getOriginalFilename())
-                    .collect(Collectors.toList());
-            flow.setData("Display saved successfully !");
+            // Set flow data with display ID and success message
+            flow.setData("Display saved successfully!");
 
         } catch (IOException e) {
             throw new MBException("Failed to save files or generate hashed pin", e);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error generating hashed pin or salt", e);
+            throw new MBException("Error generating hashed pin", e);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new MBException("An unexpected error occurred", e);
         }
     }
+
 
 
     // Add media to a display
@@ -741,4 +737,10 @@ public class DisplayService {
     }
 
 
+    public Page<Display> getDisplaysByName(String searchText, PageRequest pageRequest) {
+        if (searchText == null || searchText.isEmpty()) {
+            return displayRepository.findAll(pageRequest);
+        }
+        return displayRepository.findByNameContainingIgnoreCase(searchText, pageRequest);
+    }
 }

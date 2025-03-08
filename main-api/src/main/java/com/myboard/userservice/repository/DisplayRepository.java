@@ -30,5 +30,6 @@ public interface DisplayRepository extends MongoRepository<Display, String>, Com
     @Query("{ 'location': { $near: { $geometry: { type: 'Point', coordinates: [?0, ?1] }, $maxDistance: ?2 } } }")
     List<Display> findNearbyDisplays(double longitude, double latitude, double radius);
 
+    Page<Display> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
 }
